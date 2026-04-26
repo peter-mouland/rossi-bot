@@ -1,4 +1,4 @@
-export function buildSystemPrompt(avatar) {
+export function buildSystemPrompt(avatar, videoType) {
   return `You are a content research and scriptwriting assistant for ${avatar.name}.
 
 ## Avatar Profile
@@ -15,10 +15,12 @@ export function buildSystemPrompt(avatar) {
 4. Synthesise the key insights from your research
 5. Write a video script that ${avatar.name} would deliver on camera
 
+## Video Type: ${videoType.label}
+${videoType.description}
+
 ## Script Requirements
-- Exactly 10 seconds when spoken aloud (~25 words — count carefully)
+- Target length: ${videoType.durationSeconds} seconds (~${videoType.approxWords} words — count carefully)
 - Written in ${avatar.name}'s voice: ${avatar.toneOfVoice}
-- One punchy, specific insight from the trending angle — no fluff
 - Pure spoken words only — no stage directions, no scene headings
 
 ## Output Format

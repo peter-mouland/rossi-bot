@@ -1,7 +1,7 @@
 import { loadAvatars, loadAvatar } from '@rossi-bot/avatars'
 import { generateTranscript } from '@rossi-bot/llm'
 import * as heygen from '@rossi-bot/heygen'
-import { saveTranscript, saveDigest, logger } from '@rossi-bot/core-platform'
+import { saveTranscript, saveResearch, saveDigest, loadVideoType, logger } from '@rossi-bot/core-platform'
 
 // Register generators here as new packages are added.
 // Each value must implement: submit(transcript, avatar), getStatus(videoId)
@@ -9,14 +9,17 @@ const generators = {
   heygen,
 }
 
-export async function run({ avatarId } = {}) {
-  const avatars = avatarId
-    ? [await loadAvatar(avatarId)].filter(Boolean)
-    : await loadAvatars()
+export async function run({ avatarId, type = 'teaser' } = {}) {
+  const [avatars, videoType] = await Promise.all([
+    avatarId ? loadAvatar(avatarId).then(a => [a].filter(Boolean)) : loadAvatars(),
+    loadVideoType(type),
+  ])
 
   if (!avatars.length) {
     throw new Error(avatarId ? `Avatar not found: ${avatarId}` : 'No avatars configured')
   }
+
+  logger.info(`Video type: ${videoType.label} (${videoType.durationSeconds}s / ~${videoType.approxWords} words)`)
 
   const results = []
 
@@ -28,19 +31,21 @@ export async function run({ avatarId } = {}) {
 
     logger.info(`--- Processing: ${avatar.name} ---`)
 
-    let transcript
+    let transcript, research
     try {
-      transcript = await generateTranscript(avatar)
+      ({ transcript, research } = await generateTranscript(avatar, videoType))
     } catch (err) {
       throw new Error(`[${avatar.name}] transcript generation failed: ${err.message}`)
     }
 
-    let transcriptPath
+    let transcriptPath, researchPath
     try {
       transcriptPath = await saveTranscript(avatar, transcript)
       logger.info(`Transcript saved: ${transcriptPath}`)
+      researchPath = await saveResearch(avatar, videoType, research)
+      logger.info(`Research report saved: ${researchPath}`)
     } catch (err) {
-      throw new Error(`[${avatar.name}] saving transcript failed: ${err.message}`)
+      throw new Error(`[${avatar.name}] saving output failed: ${err.message}`)
     }
 
     let submission
@@ -55,6 +60,7 @@ export async function run({ avatarId } = {}) {
       avatar: avatar.name,
       avatarId: avatar.id,
       transcriptPath,
+      researchPath,
       videoId: submission.videoId,
       status: submission.status,
     })

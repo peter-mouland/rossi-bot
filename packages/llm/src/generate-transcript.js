@@ -3,23 +3,27 @@ import { toolDefinitions, executeTool } from './tools.js'
 import { buildSystemPrompt, extractScript } from './prompts.js'
 import { logger } from '@rossi-bot/core-platform'
 
-export async function generateTranscript(avatar) {
+export async function generateTranscript(avatar, videoType) {
   const client = getClient()
 
   const messages = [
     {
       role: 'user',
-      content: `Research what's trending in "${avatar.topicOfExpertise}" right now and write a video script for ${avatar.name}.`,
+      content: `Research what's trending in "${avatar.topicOfExpertise}" right now and write a ${videoType.label} video script for ${avatar.name}.`,
     },
   ]
 
-  logger.info(`Generating transcript for: ${avatar.name}`)
+  logger.info(`Generating ${videoType.label} transcript for: ${avatar.name}`)
+
+  // Research trail — captured for the report
+  const toolCalls = []
+  const reasoning = []
 
   while (true) {
     const response = await client.messages.create({
       model: 'claude-opus-4-6',
       max_tokens: 8096,
-      system: buildSystemPrompt(avatar),
+      system: buildSystemPrompt(avatar, videoType),
       tools: toolDefinitions,
       messages,
     })
@@ -27,10 +31,20 @@ export async function generateTranscript(avatar) {
     logger.debug(`Claude stop_reason: ${response.stop_reason}`)
     messages.push({ role: 'assistant', content: response.content })
 
+    // Capture any reasoning text before the final response
+    for (const block of response.content) {
+      if (block.type === 'text' && response.stop_reason !== 'end_turn') {
+        reasoning.push(block.text)
+      }
+    }
+
     if (response.stop_reason === 'end_turn') {
       const textBlock = response.content.find(b => b.type === 'text')
       if (!textBlock) throw new Error('Claude returned no text in final response')
-      return extractScript(textBlock.text)
+      return {
+        transcript: extractScript(textBlock.text),
+        research: { toolCalls, reasoning },
+      }
     }
 
     if (response.stop_reason === 'tool_use') {
@@ -48,6 +62,7 @@ export async function generateTranscript(avatar) {
             tool_use_id: block.id,
             content: JSON.stringify(result),
           })
+          toolCalls.push({ tool: block.name, input: block.input, result, error: null })
         } catch (err) {
           logger.error(`Tool error (${block.name}): ${err.message}`)
           toolResults.push({
@@ -56,6 +71,7 @@ export async function generateTranscript(avatar) {
             content: `Error: ${err.message}`,
             is_error: true,
           })
+          toolCalls.push({ tool: block.name, input: block.input, result: null, error: err.message })
         }
       }
 

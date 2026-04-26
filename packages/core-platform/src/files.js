@@ -1,8 +1,11 @@
 import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
 
 function outputDir() {
-  return process.env.OUTPUT_DIR ?? 'output'
+  return join(ROOT, process.env.OUTPUT_DIR ?? 'output')
 }
 
 function today() {
@@ -17,6 +20,43 @@ export async function saveTranscript(avatar, transcript) {
   const content = `# ${avatar.name} — ${date}\n\n${transcript}\n`
   const path = join(dir, `${date}.md`)
   await writeFile(path, content, 'utf-8')
+  return path
+}
+
+export async function saveResearch(avatar, videoType, research) {
+  const date = today()
+  const dir = join(avatar.dir, 'research')
+  await mkdir(dir, { recursive: true })
+
+  const lines = [
+    `# ${avatar.name} — Research Report — ${date}`,
+    `**Video Type:** ${videoType.label} (${videoType.durationSeconds}s)\n`,
+  ]
+
+  lines.push(`## Tool Calls (${research.toolCalls.length})\n`)
+  for (const call of research.toolCalls) {
+    lines.push(`### ${call.tool}`)
+    lines.push(`**Input:** \`${JSON.stringify(call.input)}\`\n`)
+    if (call.error) {
+      lines.push(`**Error:** ${call.error}\n`)
+    } else {
+      lines.push('**Results:**')
+      lines.push('```json')
+      lines.push(JSON.stringify(call.result, null, 2))
+      lines.push('```\n')
+    }
+  }
+
+  if (research.reasoning.length) {
+    lines.push(`## Claude's Reasoning\n`)
+    for (const text of research.reasoning) {
+      lines.push(text)
+      lines.push('')
+    }
+  }
+
+  const path = join(dir, `${date}.md`)
+  await writeFile(path, lines.join('\n'), 'utf-8')
   return path
 }
 
@@ -35,6 +75,7 @@ export async function saveDigest(results) {
     lines.push(`- **Video ID:** \`${result.videoId}\``)
     lines.push(`- **Status:** ${result.status}`)
     lines.push(`- **Transcript:** ${result.transcriptPath}`)
+    lines.push(`- **Research:** ${result.researchPath}`)
     lines.push('')
   }
 

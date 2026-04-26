@@ -18,14 +18,7 @@ BRAVE_SEARCH_API_KEY=your_key
 HEYGEN_API_KEY=your_key
 ```
 
-### API Keys
-
-| Key | Where to get it |
-|-----|----------------|
-| `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com) |
-| `YOUTUBE_API_KEY` | Google Cloud Console — enable YouTube Data API v3 |
-| `BRAVE_SEARCH_API_KEY` | [brave.com/search/api](https://brave.com/search/api) — free tier available |
-| `HEYGEN_API_KEY` | HeyGen account settings |
+See `docs/setup.md` for instructions on obtaining each key.
 
 ## Running
 
@@ -41,6 +34,14 @@ Run for a specific avatar only:
 pnpm --filter @rossi-bot/cli dev run --avatar rossi
 ```
 
+Specify a video type:
+
+```bash
+pnpm --filter @rossi-bot/cli dev run --avatar rossi --type teaser
+pnpm --filter @rossi-bot/cli dev run --avatar rossi --type summary
+pnpm --filter @rossi-bot/cli dev run --avatar rossi --type deep-dive
+```
+
 Check the status of a submitted video:
 
 ```bash
@@ -53,15 +54,32 @@ Print the latest daily digest:
 pnpm --filter @rossi-bot/cli dev digest
 ```
 
+## Video Types
+
+Defined in `config/video-types.json`. Add or edit types there — no code changes needed.
+
+| Type | Duration | Use case |
+|------|----------|----------|
+| `teaser` | 10s | Punchy single insight to grab attention |
+| `summary` | 60s | Concise overview of a trending topic |
+| `deep-dive` | 8min | Comprehensive exploration with context and analysis |
+
+Default type is `teaser`.
+
 ## Output
 
 | File | Description |
 |------|-------------|
-| `packages/avatars/<id>/transcripts/<date>.md` | Generated script for that avatar |
+| `packages/avatars/<id>/transcripts/<date>.md` | Generated script, stored with the avatar |
 | `output/digests/<date>.md` | Summary of all video submissions for the day |
 
 ## Adding an Avatar
 
 1. Create `packages/avatars/<id>/config.json` — see `packages/avatars/rossi/config.json` as a reference
-2. Fill in `heygenAvatarId`, `heygenVoiceId`, `toneOfVoice`, `topicOfExpertise`, and `subTopics`
+2. Fill in `heygenAvatarId`, `heygenVoiceId`, `toneOfVoice`, `topicOfExpertise`, `subTopics`, and `region`
 3. It will be picked up automatically on the next run
+
+## Adding a Video Type
+
+1. Add an entry to `config/video-types.json` with `label`, `durationSeconds`, `approxWords`, and `description`
+2. Use it immediately with `--type <key>`
