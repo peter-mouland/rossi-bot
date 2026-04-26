@@ -1,0 +1,20 @@
+{
+  "name": "@rossi-bot/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "rossi": "./src/index.js"
+  },
+  "scripts": {
+    "dev": "node src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@rossi-bot/avatars": "workspace:*",
+    "@rossi-bot/core-platform": "workspace:*",
+    "@rossi-bot/heygen": "workspace:*",
+    "@rossi-bot/llm": "workspace:*",
+    "commander": "^12.0.0",
+    "dotenv": "^16.4.0"
+  }
+}

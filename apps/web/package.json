@@ -1,0 +1,12 @@
+{
+  "name": "@rossi-bot/web",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'Web UI not yet implemented — see apps/web/src/index.js'"
+  },
+  "dependencies": {
+    "@rossi-bot/core-platform": "workspace:*"
+  }
+}

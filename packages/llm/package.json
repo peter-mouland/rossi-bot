@@ -1,0 +1,14 @@
+{
+  "name": "@rossi-bot/llm",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@rossi-bot/core-platform": "workspace:*",
+    "google-trends-api": "^4.9.2"
+  }
+}
