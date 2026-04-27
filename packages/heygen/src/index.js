@@ -10,7 +10,12 @@ function headers() {
   }
 }
 
-export async function submit(transcript, avatar) {
+export async function submit(transcript, avatar, { title, dryRun = false } = {}) {
+  if (dryRun) {
+    logger.info(`[DRY RUN] Skipping HeyGen submission for avatar: ${avatar.id}`)
+    return { videoId: 'dry-run', status: 'dry-run' }
+  }
+
   const body = {
     video_inputs: [
       {
@@ -27,6 +32,7 @@ export async function submit(transcript, avatar) {
       },
     ],
     dimension: { width: 854, height: 480 },
+    ...(title && { title }),
   }
 
   logger.info(`Submitting to HeyGen for avatar: ${avatar.id}`)

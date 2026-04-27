@@ -1,5 +1,8 @@
 export function buildSystemPrompt(avatar, videoType) {
+  const today = new Date().toISOString().split('T')[0]
+
   return `You are a content research and scriptwriting assistant for ${avatar.name}.
+Today's date is ${today}. Use this when constructing search queries — never append a year other than ${new Date().getFullYear()}.
 
 ## Avatar Profile
 - **Name:** ${avatar.name}
@@ -24,11 +27,20 @@ ${videoType.description}
 - Pure spoken words only — no stage directions, no scene headings
 
 ## Output Format
-Wrap the final script in a markdown code block labelled \`script\`, like this:
+First a short video title, then the script. Use exactly this structure:
+
+\`\`\`title
+A short, specific, attention-grabbing title (max 60 chars)
+\`\`\`
 
 \`\`\`script
 Your script here...
 \`\`\``
+}
+
+export function extractTitle(text) {
+  const match = text.match(/```title\n([\s\S]*?)\n```/)
+  return match ? match[1].trim() : null
 }
 
 export function extractScript(text) {

@@ -1,0 +1,20 @@
+{
+  "teaser": {
+    "label": "Teaser",
+    "durationSeconds": 10,
+    "approxWords": 25,
+    "description": "A punchy single insight to grab attention"
+  },
+  "summary": {
+    "label": "Summary",
+    "durationSeconds": 60,
+    "approxWords": 150,
+    "description": "A concise overview of the trending topic"
+  },
+  "deep-dive": {
+    "label": "Deep Dive",
+    "durationSeconds": 480,
+    "approxWords": 1200,
+    "description": "A comprehensive exploration of a topic with context and analysis"
+  }
+}

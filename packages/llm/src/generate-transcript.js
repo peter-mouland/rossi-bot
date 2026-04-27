@@ -1,6 +1,6 @@
 import { getClient } from './client.js'
 import { toolDefinitions, executeTool } from './tools.js'
-import { buildSystemPrompt, extractScript } from './prompts.js'
+import { buildSystemPrompt, extractScript, extractTitle } from './prompts.js'
 import { logger } from '@rossi-bot/core-platform'
 
 export async function generateTranscript(avatar, videoType) {
@@ -43,6 +43,7 @@ export async function generateTranscript(avatar, videoType) {
       if (!textBlock) throw new Error('Claude returned no text in final response')
       return {
         transcript: extractScript(textBlock.text),
+        title: extractTitle(textBlock.text),
         research: { toolCalls, reasoning },
       }
     }

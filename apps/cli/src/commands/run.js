@@ -6,10 +6,9 @@ export function registerRunCommand(program) {
     .command('run')
     .description('Research trending content, generate scripts, and submit videos')
     .option('-a, --avatar <id>', 'Run for a specific avatar only')
-    .option('-t, --type <type>', 'Video type to generate (teaser, summary, deep-dive)', 'teaser')
     .action(async options => {
       try {
-        const { results, digestPath } = await run({ avatarId: options.avatar, type: options.type })
+        const { results, digestPath } = await run({ avatarId: options.avatar })
 
         console.log(`\n${results.length} video(s) submitted.`)
         console.log(`Digest: ${digestPath}\n`)

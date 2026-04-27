@@ -6,15 +6,20 @@ const googleTrends = require('google-trends-api')
 
 export async function searchGoogleTrends({ keyword, region = 'US' }) {
   const startTime = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-  const raw = await googleTrends.relatedTopics({ keyword, startTime, geo: region })
+
+  // relatedQueries returns actual search terms people are typing.
+  // relatedTopics returns Knowledge Graph entities — too specific, often empty.
+  const raw = await googleTrends.relatedQueries({ keyword, startTime, geo: region })
   const parsed = JSON.parse(raw)
 
-  const rising = parsed?.default?.rankedList?.[0]?.rankedKeyword ?? []
-  const top = parsed?.default?.rankedList?.[1]?.rankedKeyword ?? []
+  // rankedList[0] = top queries, rankedList[1] = rising queries
+  const top = parsed?.default?.rankedList?.[0]?.rankedKeyword ?? []
+  const rising = parsed?.default?.rankedList?.[1]?.rankedKeyword ?? []
 
   return {
     keyword,
-    rising: rising.slice(0, 10).map(r => ({ topic: r.topic?.title, value: r.value })),
-    top: top.slice(0, 10).map(r => ({ topic: r.topic?.title, value: r.value })),
+    region,
+    top: top.slice(0, 10).map(r => ({ query: r.query, value: r.value, trend: r.formattedValue })),
+    rising: rising.slice(0, 10).map(r => ({ query: r.query, value: r.value, trend: r.formattedValue })),
   }
 }

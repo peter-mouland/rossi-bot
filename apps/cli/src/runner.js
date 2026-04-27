@@ -1,25 +1,24 @@
 import { loadAvatars, loadAvatar } from '@rossi-bot/avatars'
 import { generateTranscript } from '@rossi-bot/llm'
 import * as heygen from '@rossi-bot/heygen'
-import { saveTranscript, saveResearch, saveDigest, loadVideoType, logger } from '@rossi-bot/core-platform'
+import { saveTranscripts, saveResearch, saveDigest, loadVideoTypes, logger } from '@rossi-bot/core-platform'
 
 // Register generators here as new packages are added.
 // Each value must implement: submit(transcript, avatar), getStatus(videoId)
-const generators = {
-  heygen,
-}
+const generators = { heygen }
 
-export async function run({ avatarId, type = 'teaser' } = {}) {
-  const [avatars, videoType] = await Promise.all([
+export async function run({ avatarId } = {}) {
+  const [avatars, videoTypes] = await Promise.all([
     avatarId ? loadAvatar(avatarId).then(a => [a].filter(Boolean)) : loadAvatars(),
-    loadVideoType(type),
+    loadVideoTypes(),
   ])
 
   if (!avatars.length) {
     throw new Error(avatarId ? `Avatar not found: ${avatarId}` : 'No avatars configured')
   }
 
-  logger.info(`Video type: ${videoType.label} (${videoType.durationSeconds}s / ~${videoType.approxWords} words)`)
+  const dryRun = process.env.DRY_RUN === 'true'
+  if (dryRun) logger.info('[DRY RUN] Video submission will be skipped')
 
   const results = []
 
@@ -31,26 +30,40 @@ export async function run({ avatarId, type = 'teaser' } = {}) {
 
     logger.info(`--- Processing: ${avatar.name} ---`)
 
-    let transcript, research
-    try {
-      ({ transcript, research } = await generateTranscript(avatar, videoType))
-    } catch (err) {
-      throw new Error(`[${avatar.name}] transcript generation failed: ${err.message}`)
+    // Generate all video types and collect results
+    const generated = {}
+    for (const [typeId, typeConfig] of Object.entries(videoTypes)) {
+      const videoType = { id: typeId, ...typeConfig }
+      logger.info(`Generating ${videoType.label}...`)
+
+      try {
+        const { transcript, title, research } = await generateTranscript(avatar, videoType)
+        logger.info(`  Title: ${title}`)
+        generated[typeId] = { transcript, title, research, videoType }
+      } catch (err) {
+        throw new Error(`[${avatar.name}] ${typeId} generation failed: ${err.message}`)
+      }
     }
 
-    let transcriptPath, researchPath
+    // Save all transcripts to one file, research reports per type
+    let transcriptPath
     try {
-      transcriptPath = await saveTranscript(avatar, transcript)
-      logger.info(`Transcript saved: ${transcriptPath}`)
-      researchPath = await saveResearch(avatar, videoType, research)
-      logger.info(`Research report saved: ${researchPath}`)
+      transcriptPath = await saveTranscripts(avatar, generated)
+      logger.info(`Transcripts saved: ${transcriptPath}`)
+
+      for (const [typeId, { research, videoType }] of Object.entries(generated)) {
+        const researchPath = await saveResearch(avatar, videoType, research)
+        logger.info(`Research saved (${typeId}): ${researchPath}`)
+      }
     } catch (err) {
       throw new Error(`[${avatar.name}] saving output failed: ${err.message}`)
     }
 
+    // Always submit the teaser to HeyGen
+    const teaser = generated['teaser']
     let submission
     try {
-      submission = await generator.submit(transcript, avatar)
+      submission = await generator.submit(teaser.transcript, avatar, { title: teaser.title, dryRun })
       logger.info(`Video submitted: ${submission.videoId}`)
     } catch (err) {
       throw new Error(`[${avatar.name}] video submission failed (${avatar.generator}): ${err.message}`)
@@ -59,8 +72,8 @@ export async function run({ avatarId, type = 'teaser' } = {}) {
     results.push({
       avatar: avatar.name,
       avatarId: avatar.id,
+      title: teaser.title,
       transcriptPath,
-      researchPath,
       videoId: submission.videoId,
       status: submission.status,
     })

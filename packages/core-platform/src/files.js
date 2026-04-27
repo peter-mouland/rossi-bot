@@ -12,14 +12,23 @@ function today() {
   return new Date().toISOString().split('T')[0]
 }
 
-export async function saveTranscript(avatar, transcript) {
+// generated = { teaser: { transcript, title, videoType }, summary: { ... }, ... }
+export async function saveTranscripts(avatar, generated) {
   const date = today()
   const dir = join(avatar.dir, 'transcripts')
   await mkdir(dir, { recursive: true })
 
-  const content = `# ${avatar.name} — ${date}\n\n${transcript}\n`
+  const lines = [`# ${avatar.name} — ${date}\n`]
+
+  for (const [, { transcript, title, videoType }] of Object.entries(generated)) {
+    lines.push(`## ${videoType.label}`)
+    if (title) lines.push(`**${title}**\n`)
+    lines.push(transcript)
+    lines.push('')
+  }
+
   const path = join(dir, `${date}.md`)
-  await writeFile(path, content, 'utf-8')
+  await writeFile(path, lines.join('\n'), 'utf-8')
   return path
 }
 
@@ -72,6 +81,7 @@ export async function saveDigest(results) {
 
   for (const result of results) {
     lines.push(`## ${result.avatar}`)
+    if (result.title) lines.push(`**"${result.title}"**\n`)
     lines.push(`- **Video ID:** \`${result.videoId}\``)
     lines.push(`- **Status:** ${result.status}`)
     lines.push(`- **Transcript:** ${result.transcriptPath}`)
