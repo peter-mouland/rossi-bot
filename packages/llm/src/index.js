@@ -1,1 +1,2 @@
-export { generateTranscript } from './generate-transcript.js'
+export { runResearch } from './research.js'
+export { generateScripts } from './generate-script.js'

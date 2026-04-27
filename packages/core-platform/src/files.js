@@ -12,38 +12,60 @@ function today() {
   return new Date().toISOString().split('T')[0]
 }
 
-// generated = { teaser: { transcript, title, videoType }, summary: { ... }, ... }
-export async function saveTranscripts(avatar, generated) {
+function slugify(text) {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .slice(0, 60)
+}
+
+// Saves one file for all video formats: [date]-[slug].md
+// scripts = { teaser: '...', summary: '...', 'deep-dive': '...' }
+// videoTypes = { teaser: { label, ... }, ... }
+export async function saveTranscripts(avatar, title, scripts, videoTypes) {
   const date = today()
   const dir = join(avatar.dir, 'transcripts')
   await mkdir(dir, { recursive: true })
 
-  const lines = [`# ${avatar.name} — ${date}\n`]
+  const slug = slugify(title)
+  const filename = `${date}-${slug}.md`
 
-  for (const [, { transcript, title, videoType }] of Object.entries(generated)) {
-    lines.push(`## ${videoType.label}`)
-    if (title) lines.push(`**${title}**\n`)
-    lines.push(transcript)
+  const lines = [
+    `# ${title}`,
+    `**${avatar.name} — ${date}**\n`,
+  ]
+
+  for (const [typeId, script] of Object.entries(scripts)) {
+    const label = videoTypes[typeId]?.label ?? typeId
+    lines.push(`## ${label}`)
+    lines.push(script)
     lines.push('')
   }
 
-  const path = join(dir, `${date}.md`)
+  const path = join(dir, filename)
   await writeFile(path, lines.join('\n'), 'utf-8')
   return path
 }
 
-export async function saveResearch(avatar, videoType, research) {
+export async function saveResearch(avatar, research) {
   const date = today()
   const dir = join(avatar.dir, 'research')
   await mkdir(dir, { recursive: true })
 
   const lines = [
-    `# ${avatar.name} — Research Report — ${date}`,
-    `**Video Type:** ${videoType.label} (${videoType.durationSeconds}s)\n`,
+    `# ${avatar.name} — Research Report — ${date}\n`,
   ]
 
+  if (research.findings) {
+    lines.push(`## Findings\n`)
+    lines.push(research.findings)
+    lines.push('')
+  }
+
   lines.push(`## Tool Calls (${research.toolCalls.length})\n`)
-  for (const call of research.toolCalls) {
+  for (const call of (research.toolCalls ?? [])) {
     lines.push(`### ${call.tool}`)
     lines.push(`**Input:** \`${JSON.stringify(call.input)}\`\n`)
     if (call.error) {
