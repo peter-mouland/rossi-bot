@@ -1,5 +1,5 @@
 import { getClient } from './client.js'
-import { toolDefinitions, executeTool } from './tools.js'
+import { getToolDefinitions, DEFAULT_SOURCES, executeTool } from './tools.js'
 import { buildResearchPrompt, extractFindings } from './prompts.js'
 import { logger } from '@rossi-bot/core-platform'
 
@@ -13,7 +13,9 @@ export async function runResearch(avatar) {
     },
   ]
 
-  logger.info(`Researching trends for: ${avatar.name}`)
+  const sources = avatar.newsSources ?? DEFAULT_SOURCES
+  const tools = getToolDefinitions(sources)
+  logger.info(`Researching trends for: ${avatar.name} (sources: ${sources.join(', ')})`)
 
   const toolCalls = []
   const reasoning = []
@@ -22,8 +24,8 @@ export async function runResearch(avatar) {
     const response = await client.messages.create({
       model: 'claude-opus-4-6',
       max_tokens: 4096,
-      system: buildResearchPrompt(avatar),
-      tools: toolDefinitions,
+      system: buildResearchPrompt(avatar, sources),
+      tools,
       messages,
     })
 

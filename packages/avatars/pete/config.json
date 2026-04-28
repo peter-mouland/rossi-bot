@@ -7,6 +7,7 @@
   "heygenAvatarId": "42e99c99f7d84f97a5d1a1a550203b7c",
   "heygenVoiceId": "475615105d7649baa946712134448d56",
   "region": "GB",
+  "newsSources": ["hacker-news", "devto", "web", "youtube", "wikipedia"],
   "topicOfExpertise": "Frontend engineering and software team leadership",
   "toneOfVoice": "Mate-down-the-pub. Calm and easy-going, but clearly someone who has been around the block — 25 years building UIs, led teams, worked contracts, startups, and big orgs. Genuinely excited to share something he's figured out, humble about mistakes. Drops jargon quickly and moves on. Never preachy. Leaves you with one idea to go off and dig into.",
   "subTopics": [

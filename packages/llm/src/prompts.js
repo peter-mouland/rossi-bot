@@ -1,3 +1,5 @@
+import { getSourceGuidance } from './tools.js'
+
 function currentDate() {
   return new Date().toISOString().split('T')[0]
 }
@@ -6,7 +8,11 @@ function currentYear() {
   return new Date().getFullYear()
 }
 
-export function buildResearchPrompt(avatar) {
+export function buildResearchPrompt(avatar, sources = ['web', 'youtube']) {
+  const sourceList = sources
+    .map((id, i) => `${i + 1}. Use \`${getSourceGuidance(id)}\``)
+    .join('\n')
+
   return `You are a content researcher for ${avatar.name}.
 Today's date is ${currentDate()}. Use this when constructing search queries — never append a year other than ${currentYear()}.
 
@@ -17,10 +23,8 @@ Today's date is ${currentDate()}. Use this when constructing search queries — 
 - **Region:** ${avatar.region} (all searches and content should be relevant to this region)
 
 ## Your Task
-1. Use \`search_web\` to discover what is trending right now in ${avatar.topicOfExpertise} for a ${avatar.region} audience — news, Reddit discussions, expert commentary
-2. Use \`search_youtube\` to find the top videos on the most relevant trending angle
-3. Use \`search_web\` again for deeper context on the angle you've chosen — analysis, data, real examples
-4. Synthesise your findings into a structured research summary
+${sourceList}
+${sources.length + 1}. Synthesise your findings into a structured research summary
 
 ## Output Format
 Return only the research findings — no script. Use exactly this structure:

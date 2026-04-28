@@ -8,3 +8,6 @@
 | Anthropic (Claude) | LLM — research and script generation | £18/month | https://console.anthropic.com |
 | Google (YouTube API) | YouTube search for content research | Free — 10,000 units/day (~100 searches) | https://console.cloud.google.com |
 | Brave Search API | Web search for content research | Free — 2,000 queries/month | https://api.search.brave.com |
+| NewsAPI | News article search for Aria's research | Free — 100 requests/day | https://newsapi.org |
+| Hacker News (Algolia) | Engineering community search for Pete | Free, no key | https://hn.algolia.com |
+| Dev.to | Trending developer articles for Pete | Free, no key | https://dev.to/api |

@@ -1,6 +1,6 @@
 import { getConfig } from '@rossi-bot/core-platform'
 
-export async function searchYouTube({ query, maxResults = 10, region = 'US' }) {
+async function search({ query, maxResults = 10, region = 'US' }) {
   const { youtubeApiKey } = getConfig()
 
   const url = new URL('https://www.googleapis.com/youtube/v3/search')
@@ -27,3 +27,22 @@ export async function searchYouTube({ query, maxResults = 10, region = 'US' }) {
     url: `https://youtube.com/watch?v=${item.id.videoId}`,
   }))
 }
+
+export const guidance = 'search_youtube — find top videos on the most relevant trending angle'
+
+export const definition = {
+  name: 'search_youtube',
+  description:
+    'Search YouTube for top videos on a topic. Returns titles, channels, descriptions, and links. ' +
+    'Use this to find the most-viewed content on a trending topic.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      query: { type: 'string', description: 'Search query' },
+      maxResults: { type: 'number', description: 'Number of results to return (default: 10, max: 20)' },
+    },
+    required: ['query'],
+  },
+}
+
+export const execute = (input, { region } = {}) => search({ ...input, region })

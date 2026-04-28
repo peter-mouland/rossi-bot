@@ -1,6 +1,6 @@
 import { getConfig } from '@rossi-bot/core-platform'
 
-export async function searchWeb({ query, maxResults = 10, region = 'us' }) {
+async function search({ query, maxResults = 10, region = 'us' }) {
   const { braveApiKey } = getConfig()
 
   const url = new URL('https://api.search.brave.com/res/v1/web/search')
@@ -21,9 +21,28 @@ export async function searchWeb({ query, maxResults = 10, region = 'us' }) {
   }
 
   const data = await response.json()
-  return (data.web?.results ?? []).map(result => ({
-    title: result.title,
-    url: result.url,
-    description: result.description,
+  return (data.web?.results ?? []).map(r => ({
+    title: r.title,
+    url: r.url,
+    description: r.description,
   }))
 }
+
+export const guidance = 'search_web — broad web search for news, articles, expert commentary'
+
+export const definition = {
+  name: 'search_web',
+  description:
+    'Search the web for articles, news, and content on a topic. ' +
+    'Use for broader research — opinions, analysis, recent news — beyond YouTube.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      query: { type: 'string', description: 'Search query' },
+      maxResults: { type: 'number', description: 'Number of results to return (default: 10)' },
+    },
+    required: ['query'],
+  },
+}
+
+export const execute = (input, { region } = {}) => search({ ...input, region })

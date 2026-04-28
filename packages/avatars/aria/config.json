@@ -8,6 +8,7 @@
   "heygenVoiceId": "9bfc54ad124e4e038c42d048fd17ab5f",
   "toneOfVoice": "Confidently cute. Cuts through the noise with sharp takes. Speaks like someone who has done the work and wants to share what actually matters — no fluff, no hype.",
   "region": "GB",
+  "newsSources": ["news-api", "moneysavingexpert", "bbc-business", "thisismoney", "web", "youtube", "wikipedia"],
   "topicOfExpertise": "Personal finance and productivity",
   "subTopics": [
     "Time-to-money optimisation",

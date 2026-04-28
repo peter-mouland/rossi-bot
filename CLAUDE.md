@@ -68,23 +68,78 @@ The CLI maps that string to the package at `apps/cli/src/runner.js`.
 
 ## Adding a New Search Tool
 
-1. Create adapter at `packages/llm/src/adapters/<name>.js`
-2. Add tool definition to `toolDefinitions` in `packages/llm/src/tools.js`
-3. Add a case to the `executeTool()` switch statement
+Each adapter is fully self-contained. Create `packages/llm/src/adapters/<name>.js` exporting:
+
+```js
+export const guidance = 'search_name — one-line description for the research prompt'
+
+export const definition = {
+  name: 'search_name',          // tool name Claude will call
+  description: '...',           // description for Claude tool use
+  input_schema: { ... },        // JSON Schema for inputs
+}
+
+export const execute = (input, ctx) => { ... }  // ctx has { region }
+```
+
+Then register it in `packages/llm/src/tools.js`:
+
+```js
+import * as mySource from './adapters/<name>.js'
+
+const SOURCES = {
+  // ...existing sources...
+  'my-source': mySource,
+}
+```
+
+Add `"my-source"` to the avatar's `newsSources` array to enable it.
+
+### RSS-backed adapters
+
+For RSS feeds, import `searchRss` from `./rss.js` and call it with a hardcoded URL:
+
+```js
+import { searchRss } from './rss.js'
+export const execute = (input) => searchRss({ ...input, url: 'https://example.com/rss' })
+```
+
+### Available sources
+
+| Source id | Adapter | Notes |
+|-----------|---------|-------|
+| `web` | `brave.js` | Requires `BRAVE_SEARCH_API_KEY` |
+| `youtube` | `youtube.js` | Requires `YOUTUBE_API_KEY` |
+| `hacker-news` | `hacker-news.js` | Free, no key |
+| `news-api` | `news-api.js` | Requires `NEWS_API_KEY` |
+| `devto` | `devto.js` | Free, no key |
+| `moneysavingexpert` | `moneysavingexpert.js` | RSS, free |
+| `bbc-business` | `bbc-business.js` | RSS, free |
+| `thisismoney` | `thisismoney.js` | RSS, free |
+| `wikipedia` | `wikipedia.js` | Free, no key |
 
 ## Pipeline (per avatar, nightly)
 
 ```
-1. llm.generateTranscript(avatar)
-   └── Claude uses search tools to find trending content → writes script in avatar's voice
+1. llm.runResearch(avatar)
+   └── Claude uses avatar's newsSources tools to find trending content → structured findings
 
-2. core-platform.saveTranscript(avatar, transcript)
-   └── output/transcripts/<date>/<avatarId>.md
+2. llm.generateScripts(avatar, videoTypes, findings)
+   └── Claude writes teaser + summary + deep-dive scripts on one shared topic and title
 
-3. generator.submit(transcript, avatar)
+3. core-platform.saveResearch(avatar, research)
+   └── packages/avatars/<id>/research/<date>.md
+
+4. core-platform.saveTranscripts(avatar, title, scripts, videoTypes)
+   └── packages/avatars/<id>/transcripts/<date>-<slug>.md  (single file, all formats)
+
+5. generator.submit(teaserScript, avatar)
    └── submits to video service → returns { videoId }
 
-4. core-platform.saveDigest(results)
+6. sendEmail(fromEmail, validator, subject, body)
+   └── emails transcript + research findings to each outputValidator
+
+7. core-platform.saveDigest(results)
    └── output/digests/<date>.md
 ```
 
@@ -103,6 +158,7 @@ ANTHROPIC_API_KEY=       Claude API key
 YOUTUBE_API_KEY=         YouTube Data API v3
 BRAVE_SEARCH_API_KEY=    Brave Search API
 HEYGEN_API_KEY=          HeyGen API key
+NEWS_API_KEY=            NewsAPI key (newsapi.org)
 RESEND_API_KEY=          Resend API key
 LOG_LEVEL=info           debug | info | warn | error
 OUTPUT_DIR=output        Where transcripts and digests are written
@@ -113,10 +169,12 @@ OUTPUT_DIR=output        Where transcripts and digests are written
 ```
 packages/avatars/<id>/
   config.json
+  research/
+    <date>.md                     Research findings + tool call log
   transcripts/
-    <date>.md            One script per run, stored with the avatar
+    <date>-<title-slug>.md        All three formats in one file (teaser, summary, deep-dive)
 
 output/
   digests/
-    <date>.md            Summary of all video submissions
+    <date>.md                     Summary of all video submissions
 ```

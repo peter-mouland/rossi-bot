@@ -1,50 +1,48 @@
-import { searchYouTube } from './adapters/youtube.js'
-import { searchWeb } from './adapters/brave.js'
+import * as web from './adapters/brave.js'
+import * as youtube from './adapters/youtube.js'
+import * as hackerNews from './adapters/hacker-news.js'
+import * as newsApi from './adapters/news-api.js'
+import * as devto from './adapters/devto.js'
+import * as moneysavingexpert from './adapters/moneysavingexpert.js'
+import * as bbcBusiness from './adapters/bbc-business.js'
+import * as thisismoney from './adapters/thisismoney.js'
+import * as wikipedia from './adapters/wikipedia.js'
 
-export const toolDefinitions = [
-  {
-    name: 'search_youtube',
-    description:
-      'Search YouTube for top videos on a topic. Returns titles, channels, descriptions, and links. ' +
-      'Use this to find the most-viewed content on a trending topic.',
-    input_schema: {
-      type: 'object',
-      properties: {
-        query: { type: 'string', description: 'Search query' },
-        maxResults: {
-          type: 'number',
-          description: 'Number of results to return (default: 10, max: 20)',
-        },
-      },
-      required: ['query'],
-    },
-  },
-  {
-    name: 'search_web',
-    description:
-      'Search the web for articles, news, and content on a topic. ' +
-      'Use for broader research — opinions, analysis, recent news — beyond YouTube.',
-    input_schema: {
-      type: 'object',
-      properties: {
-        query: { type: 'string', description: 'Search query' },
-        maxResults: {
-          type: 'number',
-          description: 'Number of results to return (default: 10)',
-        },
-      },
-      required: ['query'],
-    },
-  },
-]
+// Registry of all available sources.
+// Key is the source id used in avatar config `newsSources`.
+// Each adapter owns its definition, guidance, and execute function.
+const SOURCES = {
+  web,
+  youtube,
+  'hacker-news': hackerNews,
+  'news-api': newsApi,
+  devto,
+  moneysavingexpert,
+  'bbc-business': bbcBusiness,
+  thisismoney,
+  wikipedia,
+}
 
-export async function executeTool(name, input, { region = 'US' } = {}) {
-  switch (name) {
-    case 'search_youtube':
-      return searchYouTube({ ...input, region })
-    case 'search_web':
-      return searchWeb({ ...input, region })
-    default:
-      throw new Error(`Unknown tool: ${name}`)
-  }
+// Reverse map from tool name → adapter for executeTool lookups
+const BY_TOOL_NAME = Object.fromEntries(
+  Object.values(SOURCES).map(s => [s.definition.name, s])
+)
+
+export const DEFAULT_SOURCES = ['web', 'youtube']
+
+export function getToolDefinitions(sources = DEFAULT_SOURCES) {
+  return sources.map(id => {
+    if (!SOURCES[id]) throw new Error(`Unknown news source: "${id}"`)
+    return SOURCES[id].definition
+  })
+}
+
+export function getSourceGuidance(id) {
+  return SOURCES[id]?.guidance ?? id
+}
+
+export async function executeTool(name, input, ctx = {}) {
+  const source = BY_TOOL_NAME[name]
+  if (!source) throw new Error(`Unknown tool: ${name}`)
+  return source.execute(input, ctx)
 }
