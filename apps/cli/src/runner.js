@@ -62,7 +62,7 @@ export async function run({ avatarId } = {}) {
     // Email transcript to output validators
     if (avatar.outputValidators?.length) {
       const transcriptContent = await import('fs/promises').then(fs => fs.readFile(transcriptPath, 'utf-8'))
-      const emailBody = `${research.findings}\n\n---\n\n${transcriptContent}`
+      const emailBody = `${transcriptContent}\n\n---\n\n## Research\n\n${research.findings}`
       for (const email of avatar.outputValidators) {
         try {
           await sendEmail(avatar.fromEmail, email, `[${avatar.name}] ${title}`, emailBody)
