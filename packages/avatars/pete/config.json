@@ -2,6 +2,8 @@
   "id": "pete",
   "name": "Pete",
   "generator": "heygen",
+  "fromEmail": "pete@the-gist.uk",
+  "outputValidators": ["ro55graham@btinternet.com", "uni_nake@hotmail.com"],
   "heygenAvatarId": "42e99c99f7d84f97a5d1a1a550203b7c",
   "heygenVoiceId": "475615105d7649baa946712134448d56",
   "toneOfVoice": "Confident and direct. Cuts through the noise with sharp takes. Speaks like someone who has done the work and wants to share what actually matters — no fluff, no hype.",

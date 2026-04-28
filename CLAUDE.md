@@ -56,7 +56,9 @@ The CLI maps that string to the package at `apps/cli/src/runner.js`.
 1. Create `packages/avatars/<id>/config.json`
 2. Required fields: `id`, `name`, `generator`, `toneOfVoice`, `topicOfExpertise`, `subTopics[]`
 3. Add generator-specific fields (e.g. `heygenAvatarId`, `heygenVoiceId`)
-4. All avatar-specific files (prompts, assets, overrides) live in that same directory
+4. Optional: `fromEmail` — sender address for this avatar (must be verified in Resend)
+5. Optional: `outputValidators[]` — array of email addresses to receive the transcript after each run
+5. All avatar-specific files (prompts, assets, overrides) live in that same directory
 
 ## Adding a New Generator
 
@@ -101,6 +103,7 @@ ANTHROPIC_API_KEY=       Claude API key
 YOUTUBE_API_KEY=         YouTube Data API v3
 BRAVE_SEARCH_API_KEY=    Brave Search API
 HEYGEN_API_KEY=          HeyGen API key
+RESEND_API_KEY=          Resend API key
 LOG_LEVEL=info           debug | info | warn | error
 OUTPUT_DIR=output        Where transcripts and digests are written
 ```

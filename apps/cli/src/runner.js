@@ -1,7 +1,7 @@
 import { loadAvatars, loadAvatar } from '@rossi-bot/avatars'
 import { runResearch, generateScripts } from '@rossi-bot/llm'
 import * as heygen from '@rossi-bot/heygen'
-import { saveTranscripts, saveResearch, saveDigest, loadVideoTypes, logger } from '@rossi-bot/core-platform'
+import { saveTranscripts, saveResearch, saveDigest, loadVideoTypes, sendEmail, logger } from '@rossi-bot/core-platform'
 
 // Register generators here as new packages are added.
 // Each value must implement: submit(transcript, avatar), getStatus(videoId)
@@ -57,6 +57,19 @@ export async function run({ avatarId } = {}) {
       logger.info(`Transcript saved: ${transcriptPath}`)
     } catch (err) {
       throw new Error(`[${avatar.name}] saving output failed: ${err.message}`)
+    }
+
+    // Email transcript to output validators
+    if (avatar.outputValidators?.length) {
+      const transcriptContent = await import('fs/promises').then(fs => fs.readFile(transcriptPath, 'utf-8'))
+      const emailBody = `${research.findings}\n\n---\n\n${transcriptContent}`
+      for (const email of avatar.outputValidators) {
+        try {
+          await sendEmail(avatar.fromEmail, email, `[${avatar.name}] ${title}`, emailBody)
+        } catch (err) {
+          logger.warn(`Failed to email ${email}: ${err.message}`)
+        }
+      }
     }
 
     // Always submit the teaser to HeyGen
