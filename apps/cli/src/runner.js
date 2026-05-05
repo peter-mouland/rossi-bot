@@ -77,7 +77,7 @@ export async function run({ avatarId } = {}) {
       const researchPath = await saveResearch(avatar, research)
       logger.info(`Research saved: ${researchPath}`)
 
-      transcriptPath = await saveTranscripts(avatar, title, scripts, videoTypes)
+      transcriptPath = await saveTranscripts(avatar, title, scripts, videoTypes, summaryResult.productionNotes)
       logger.info(`Transcript saved: ${transcriptPath}`)
     } catch (err) {
       throw new Error(`[${avatar.name}] saving output failed: ${err.message}`)
@@ -87,21 +87,31 @@ export async function run({ avatarId } = {}) {
     if (avatar.outputValidators?.length) {
       const buildSection = (heading, result) => {
         const scriptBlocks = Object.entries(result.scripts)
-          .map(([typeId, script]) => `### ${videoTypes[typeId]?.label ?? typeId}\n\n${script}`)
+          .map(([typeId, script]) => {
+            const label = videoTypes[typeId]?.label ?? typeId
+            const notes = result.productionNotes?.[typeId]
+            const notesBlock = notes
+              ? '\n\n' + Object.entries(notes)
+                  .map(([k, v]) => `> **${k}:** ${v}`)
+                  .join('\n')
+              : ''
+            return `### ${label}\n\n${script}${notesBlock}`
+          })
           .join('\n\n---\n\n')
         return [`## ${heading}`, scriptBlocks].join('\n\n')
       }
 
       const emailBody = [
         `# ${avatar.name} — ${title}`,
+        buildSection('Summary Analysis', summaryResult),
+        '---',
+        buildSection('Full Analysis', fullResult),
+        '---',
+        `## Setup`,
         `**Angle:** ${chosenAngle.angle}`,
         `*${chosenAngle.rationale}*`,
         '',
         `## Research\n\n${renderFindingsMarkdown(research.findings)}`,
-        '---',
-        buildSection('Summary Analysis', summaryResult),
-        '---',
-        buildSection('Full Analysis', fullResult),
       ].join('\n\n')
 
       for (const email of avatar.outputValidators) {

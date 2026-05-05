@@ -1,7 +1,7 @@
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 import { getClient } from '../client.js'
-import { buildAllScriptsPrompt, extractTitle, extractScript } from '../prompts.js'
+import { buildAllScriptsPrompt, extractTitle, extractScript, extractNotes } from '../prompts.js'
 import { logger } from '@rossi-bot/core-platform'
 
 async function loadExampleScript(avatar) {
@@ -43,11 +43,14 @@ export async function generateScripts(avatar, videoTypes, context) {
   if (!title) throw new Error('No title block found in script response')
 
   const scripts = {}
+  const productionNotes = {}
   for (const typeId of Object.keys(videoTypes)) {
     const script = extractScript(textBlock.text, typeId)
     if (!script) throw new Error(`No script block found for type: ${typeId}`)
     scripts[typeId] = script
+    const notes = extractNotes(textBlock.text, typeId)
+    if (notes) productionNotes[typeId] = notes
   }
 
-  return { title, scripts }
+  return { title, scripts, productionNotes }
 }

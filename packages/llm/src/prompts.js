@@ -66,9 +66,9 @@ export function buildAllScriptsPrompt(avatar, videoTypes, { chosenAngle, finding
     : ''
 
   const typeDescriptions = {
-    teaser: 'Creates a specific curiosity gap — one surprising fact or statement that makes the viewer need to know more. Does NOT resolve the question. No action, no answer, just the hook.',
-    summary: 'Directly answers the surface question and gives one clear action. Assumes the viewer saw the teaser and wants the short version.',
-    'deep-dive': 'Earns the full picture — backstory, mechanism, edge cases, lasting insight. Assumes the viewer wants to properly understand, not just the answer.',
+    teaser: 'Creates a specific curiosity gap — one surprising fact or statement that makes the viewer need to know more. Does NOT resolve the question. No action, no answer, just the hook. End by directing viewers to the deep dive for the full picture.',
+    summary: 'Directly answers the surface question and gives one clear action. Assumes the viewer saw the teaser and wants the short version. End by telling viewers the deep dive goes much further — give them a reason to watch it.',
+    'deep-dive': 'Earns the full picture — backstory, mechanism, edge cases, lasting insight. Assumes the viewer wants to properly understand, not just the answer. Change angle, tone, or story roughly every 90 seconds to maintain attention. Close with a single reframe sentence — not a list, not a summary.',
   }
 
   const typeBlocks = Object.entries(videoTypes)
@@ -80,8 +80,15 @@ Target: ${vt.durationSeconds}s (~${vt.approxWords} words — count carefully)`
     })
     .join('\n\n')
 
+  const isDeepDive = (id) => id === 'deep-dive'
+
   const outputBlocks = Object.keys(videoTypes)
-    .map(id => `\`\`\`${id}\nYour ${id} script here...\n\`\`\``)
+    .map(id => {
+      const notesFields = isDeepDive(id)
+        ? 'emotion: [intended tone]\nkeyQuote: [most quotable line from this script]\nchapterMarkers: [0:00 — section | 1:30 — section | ...]'
+        : 'emotion: [intended tone]\nkeyQuote: [most quotable line from this script]'
+      return `\`\`\`${id}\nYour ${id} script here...\n\`\`\`\n\n\`\`\`notes-${id}\n${notesFields}\n\`\`\``
+    })
     .join('\n\n')
 
   const voiceRulesBlock = avatar.voiceRules?.length
@@ -111,7 +118,9 @@ Today's date is ${currentDate()}.
 - **Region:** ${avatar.region}
 ${audienceBlock}${forbiddenBlock}
 ## Content Series
-These three formats are a funnel — not three versions of the same script. The teaser creates a curiosity gap. The summary resolves it. The deep-dive earns the full understanding. Write them so a viewer who watches all three gets a progressively richer experience, not the same points repeated at different lengths.
+These three formats are a funnel — not three versions of the same script. The teaser creates a curiosity gap. The summary resolves it. The deep-dive earns the full understanding. Write them so a viewer who watches all three gets a progressively richer experience, not the same points repeated at different lengths. The teaser and summary must end with a natural prompt to watch the deep dive — not a forced call-to-action, but a genuine reason ("there's a lot more to this", "the full picture is more interesting", "I go into the mechanics in the deep dive").
+
+Find the time-sensitive element in the research — a rate that could change, a deadline, a trend that's moving now — and name it. Give the viewer a reason this week matters, not next month.
 
 ${voiceRulesBlock}${exampleBlock}## Angle to Cover
 ${chosenAngle.angle}
@@ -146,4 +155,20 @@ export function extractTitle(text) {
 export function extractScript(text, typeId) {
   const match = text.match(new RegExp('```' + typeId + '\\n([\\s\\S]*?)\\n```'))
   return match ? match[1].trim() : null
+}
+
+// Parses a ```notes-<typeId>``` block into a plain object.
+// Each line is "key: value". Returns null if block not found.
+export function extractNotes(text, typeId) {
+  const match = text.match(new RegExp('```notes-' + typeId + '\\n([\\s\\S]*?)\\n```'))
+  if (!match) return null
+  const notes = {}
+  for (const line of match[1].split('\n')) {
+    const colon = line.indexOf(':')
+    if (colon === -1) continue
+    const key = line.slice(0, colon).trim()
+    const value = line.slice(colon + 1).trim()
+    if (key && value) notes[key] = value
+  }
+  return Object.keys(notes).length ? notes : null
 }

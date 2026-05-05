@@ -23,8 +23,9 @@ function slugify(text) {
 
 // Saves one file for all video formats: [date]-[slug].md
 // scripts = { teaser: '...', summary: '...', 'deep-dive': '...' }
+// productionNotes = { teaser: { emotion, keyQuote }, ... }
 // videoTypes = { teaser: { label, ... }, ... }
-export async function saveTranscripts(avatar, title, scripts, videoTypes) {
+export async function saveTranscripts(avatar, title, scripts, videoTypes, productionNotes = {}) {
   const date = today()
   const dir = join(avatar.dir, 'transcripts')
   await mkdir(dir, { recursive: true })
@@ -41,6 +42,13 @@ export async function saveTranscripts(avatar, title, scripts, videoTypes) {
     const label = videoTypes[typeId]?.label ?? typeId
     lines.push(`## ${label}`)
     lines.push(script)
+    const notes = productionNotes[typeId]
+    if (notes) {
+      lines.push('')
+      for (const [k, v] of Object.entries(notes)) {
+        lines.push(`> **${k}:** ${v}`)
+      }
+    }
     lines.push('')
   }
 
