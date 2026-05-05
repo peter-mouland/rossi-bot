@@ -1,8 +1,15 @@
+function sevenDaysAgoTimestamp() {
+  const d = new Date()
+  d.setDate(d.getDate() - 7)
+  return Math.floor(d.getTime() / 1000)
+}
+
 async function search({ query, maxResults = 5 }) {
   const url = new URL('https://hn.algolia.com/api/v1/search')
   url.searchParams.set('query', query)
   url.searchParams.set('tags', 'story')
   url.searchParams.set('hitsPerPage', String(maxResults))
+  url.searchParams.set('numericFilters', `created_at_i>${sevenDaysAgoTimestamp()}`)
 
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Hacker News search failed: ${res.status}`)

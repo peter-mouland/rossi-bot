@@ -1,6 +1,17 @@
+import { readFile } from 'fs/promises'
+import { join } from 'path'
 import { getClient } from '../client.js'
 import { buildAllScriptsPrompt, extractTitle, extractScript } from '../prompts.js'
 import { logger } from '@rossi-bot/core-platform'
+
+async function loadExampleScript(avatar) {
+  if (!avatar.dir) return null
+  try {
+    return await readFile(join(avatar.dir, 'example-script.md'), 'utf-8')
+  } catch {
+    return null
+  }
+}
 
 // Returns { title, scripts: { teaser, summary, 'deep-dive' } }
 // context = { chosenAngle, findings, rawSources? }
@@ -10,10 +21,13 @@ export async function generateScripts(avatar, videoTypes, context) {
 
   logger.info(`Generating scripts for: ${avatar.name}`)
 
+  const exampleScript = await loadExampleScript(avatar)
+  if (exampleScript) logger.debug(`  Using example script for voice reference`)
+
   const response = await client.messages.create({
     model: 'claude-opus-4-6',
     max_tokens: 8096,
-    system: buildAllScriptsPrompt(avatar, videoTypes, context),
+    system: buildAllScriptsPrompt(avatar, videoTypes, { ...context, exampleScript }),
     messages: [
       {
         role: 'user',

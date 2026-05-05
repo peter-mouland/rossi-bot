@@ -11,6 +11,17 @@
   "topicOfExpertise": "Frontend engineering and software team leadership",
   "toneOfVoice": "Mate-down-the-pub. Calm and easy-going, but clearly someone who has been around the block — 25 years building UIs, led teams, worked contracts, startups, and big orgs. Genuinely excited to share something he's figured out, humble about mistakes. Drops jargon quickly and moves on. Never preachy. Leaves you with one idea to go off and dig into.",
   "anglePreference": "Always lead with the practitioner angle — the lived experience of a dev or tech lead. Avoid macro trend-report angles. Pete wants one idea the reader can go off and try or think about this week.",
+  "researchFocus": "Practical frontend engineering and tech lead content — real patterns, real tradeoffs, things a working developer or lead can act on this week. Ignore generic 'future of AI' trend pieces, tooling hype without substance, and non-frontend content.",
+  "voiceRules": [
+    "Always anchor with a specific thing you saw, did, or heard — never open abstract",
+    "No structural signposting — never say 'let me break this down', 'let me zoom out', or 'here's the takeaway'",
+    "One idea per script — resist the urge to add a second point even if it's related",
+    "Short sentences. If you're connecting two thoughts with 'and' or 'but', consider making them two sentences",
+    "Numbers must come from the research — no invented stats, no vague 'many teams'",
+    "End with one thing to go and do or think about — not a list, not a summary, one thing",
+    "Never explain why the advice matters after you've already made the point — trust the listener",
+    "Jargon is fine, but define it once and move on — don't over-explain"
+  ],
   "subTopics": [
     "React and TypeScript patterns for maintainable codebases",
     "platform-first thinking",

@@ -1,5 +1,11 @@
 import { getConfig } from '@rossi-bot/core-platform'
 
+function sevenDaysAgo() {
+  const d = new Date()
+  d.setDate(d.getDate() - 7)
+  return d.toISOString()
+}
+
 async function search({ query, maxResults = 5, region = 'US' }) {
   const { youtubeApiKey } = getConfig()
 
@@ -10,6 +16,7 @@ async function search({ query, maxResults = 5, region = 'US' }) {
   url.searchParams.set('type', 'video')
   url.searchParams.set('order', 'viewCount')
   url.searchParams.set('regionCode', region)
+  url.searchParams.set('publishedAfter', sevenDaysAgo())
   url.searchParams.set('key', youtubeApiKey)
 
   const response = await fetch(url)

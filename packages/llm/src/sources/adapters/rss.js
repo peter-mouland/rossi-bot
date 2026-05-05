@@ -24,6 +24,12 @@ function parseItems(xml) {
   return items
 }
 
+function sevenDaysAgo() {
+  const d = new Date()
+  d.setDate(d.getDate() - 7)
+  return d
+}
+
 export async function searchRss({ url, keyword, maxResults = 5 }) {
   const res = await fetch(url, { headers: { 'User-Agent': 'rossi-bot/1.0' } })
   if (!res.ok) throw new Error(`RSS fetch failed (${url}): ${res.status}`)
@@ -31,12 +37,20 @@ export async function searchRss({ url, keyword, maxResults = 5 }) {
   const xml = await res.text()
   let items = parseItems(xml)
 
+  // Filter to last 7 days — items without a date are kept to avoid silently dropping content
+  const cutoff = sevenDaysAgo()
+  items = items.filter(i => {
+    if (!i.publishedAt) return true
+    const d = new Date(i.publishedAt)
+    return isNaN(d.getTime()) || d >= cutoff
+  })
+
   if (keyword) {
-    const kw = keyword.toLowerCase()
-    items = items.filter(i =>
-      i.title?.toLowerCase().includes(kw) ||
-      i.description?.toLowerCase().includes(kw)
-    )
+    const words = keyword.toLowerCase().split(/[\s,]+/).filter(Boolean)
+    items = items.filter(i => {
+      const text = `${i.title ?? ''} ${i.description ?? ''}`.toLowerCase()
+      return words.some(w => text.includes(w))
+    })
   }
 
   return {

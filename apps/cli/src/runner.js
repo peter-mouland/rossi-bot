@@ -1,5 +1,5 @@
 import { loadAvatars, loadAvatar } from '@rossi-bot/avatars'
-import { runResearch, selectAngle, generateScripts } from '@rossi-bot/llm'
+import { runResearch, selectAngle, generateScripts, critiqueScripts } from '@rossi-bot/llm'
 import * as heygen from '@rossi-bot/heygen'
 import { saveTranscripts, saveResearch, saveDigest, renderFindingsMarkdown, loadVideoTypes, sendEmail, logger } from '@rossi-bot/core-platform'
 
@@ -57,6 +57,16 @@ export async function run({ avatarId } = {}) {
       logger.info(`  Title: ${summaryResult.title}`)
     } catch (err) {
       throw new Error(`[${avatar.name}] script generation failed: ${err.message}`)
+    }
+
+    // Run Haiku critique pass on both sets of scripts in parallel to remove AI tells
+    try {
+      ;[summaryResult.scripts, fullResult.scripts] = await Promise.all([
+        critiqueScripts(avatar, videoTypes, summaryResult.scripts),
+        critiqueScripts(avatar, videoTypes, fullResult.scripts),
+      ])
+    } catch (err) {
+      logger.warn(`[${avatar.name}] critique failed, using uncritiqued scripts: ${err.message}`)
     }
 
     const { title, scripts } = summaryResult

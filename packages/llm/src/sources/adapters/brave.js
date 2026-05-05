@@ -7,6 +7,7 @@ async function search({ query, maxResults = 5, region = 'us' }) {
   url.searchParams.set('q', query)
   url.searchParams.set('count', String(maxResults))
   url.searchParams.set('country', region.toLowerCase())
+  url.searchParams.set('freshness', 'pw')
 
   const response = await fetch(url, {
     headers: {

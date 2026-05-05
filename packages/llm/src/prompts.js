@@ -13,20 +13,24 @@ export function buildResearchPrompt(avatar, sources = ['web', 'youtube']) {
     .map((id, i) => `${i + 1}. Use \`${getSourceGuidance(id)}\``)
     .join('\n')
 
+  const focusBlock = avatar.researchFocus
+    ? `\n## Research Focus\n${avatar.researchFocus}\nPrioritise sources that match this. Discard results that clearly don't.\n`
+    : ''
+
   return `You are a content researcher for ${avatar.name}.
-Today's date is ${currentDate()}. Use this when constructing search queries — never append a year other than ${currentYear()}.
+Today's date is ${currentDate()}. All search tools are pre-filtered to the last 7 days — only surface content published in that window. Use this when constructing search queries — never append a year other than ${currentYear()}.
 
 ## Avatar Profile
 - **Name:** ${avatar.name}
 - **Topic of Expertise:** ${avatar.topicOfExpertise}
 - **Sub-topics:** ${avatar.subTopics.join(', ')}
 - **Region:** ${avatar.region} (all searches and content should be relevant to this region)
-
+${focusBlock}
 ## Your Task
 ${sourceList}
 ${sources.length + 1}. Call \`report_findings\` with your structured research output
 
-Provide 2–4 candidate angles. Each must be meaningfully distinct.`
+Only include sources published in the last 7 days. Provide 2–4 candidate angles. Each must be meaningfully distinct.`
 }
 
 export function buildAngleSelectionPrompt(avatar) {
@@ -42,7 +46,7 @@ Call \`select_angle\` with the index of the best candidate angle from the list p
 Apply the avatar's angle preference strictly — it is the editorial rule that overrides all other considerations.`
 }
 
-export function buildAllScriptsPrompt(avatar, videoTypes, { chosenAngle, findings, rawSources }) {
+export function buildAllScriptsPrompt(avatar, videoTypes, { chosenAngle, findings, rawSources, exampleScript }) {
   const supportingSources = (chosenAngle.supportingSourceIndices ?? [])
     .map(i => findings.sources[i])
     .filter(Boolean)
@@ -67,6 +71,16 @@ ${vt.description}
     .map(id => `\`\`\`${id}\nYour ${id} script here...\n\`\`\``)
     .join('\n\n')
 
+  const voiceRulesBlock = avatar.voiceRules?.length
+    ? '\n## Voice Rules — Non-Negotiable\n' +
+      avatar.voiceRules.map((r, i) => `${i + 1}. ${r}`).join('\n') +
+      '\n\nThese override all other instructions. If in doubt, shorter and more specific wins.\n'
+    : ''
+
+  const exampleBlock = exampleScript
+    ? `\n## Example Script (match this voice exactly)\n${exampleScript}\n`
+    : ''
+
   return `You are a scriptwriter for ${avatar.name}.
 Today's date is ${currentDate()}.
 
@@ -74,7 +88,7 @@ Today's date is ${currentDate()}.
 - **Name:** ${avatar.name}
 - **Tone of Voice:** ${avatar.toneOfVoice}
 - **Region:** ${avatar.region}
-
+${voiceRulesBlock}${exampleBlock}
 ## Angle to Cover
 ${chosenAngle.angle}
 
@@ -92,7 +106,7 @@ One title covers all three formats — they are the teaser, summary, and deep-di
 ${typeBlocks}
 
 ## Requirements for all scripts
-- Written in ${avatar.name}'s voice: ${avatar.toneOfVoice}
+- Written in ${avatar.name}'s voice — see Voice Rules above
 - Pure spoken words only — no stage directions, no scene headings
 - Hit the word counts
 ${rawSourcesBlock}

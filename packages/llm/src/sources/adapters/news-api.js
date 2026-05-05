@@ -1,3 +1,9 @@
+function sevenDaysAgo() {
+  const d = new Date()
+  d.setDate(d.getDate() - 7)
+  return d.toISOString().split('T')[0]
+}
+
 async function search({ query, maxResults = 5 }) {
   const apiKey = process.env.NEWS_API_KEY
   if (!apiKey) throw new Error('Missing NEWS_API_KEY')
@@ -6,6 +12,7 @@ async function search({ query, maxResults = 5 }) {
   url.searchParams.set('q', query)
   url.searchParams.set('language', 'en')
   url.searchParams.set('sortBy', 'publishedAt')
+  url.searchParams.set('from', sevenDaysAgo())
   url.searchParams.set('pageSize', String(maxResults))
   url.searchParams.set('apiKey', apiKey)
 
