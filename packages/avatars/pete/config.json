@@ -6,6 +6,11 @@
   "outputValidators": ["ro55graham@btinternet.com", "uni_nake@hotmail.com"],
   "heygenAvatarId": "42e99c99f7d84f97a5d1a1a550203b7c",
   "heygenVoiceId": "475615105d7649baa946712134448d56",
+  "heygenMotionEngines": {
+    "teaser": "avatar_v5",
+    "summary": "avatar_v5",
+    "deep-dive": ""
+  },
   "region": "GB",
   "audience": "Senior frontend engineers and tech leads, 5–15 years experience. Currently working in a product company or agency, probably managing or mentoring others. Frustrated by decisions made above them they can't control, trying to do good work within messy real-world constraints. Responds to someone who has been in the same situation and talks straight about what actually works.",
   "toneOfVoice": "Pete anchors every point in something he personally saw, built, or got wrong. He treats the listener as a peer — same level, not a student. He goes deep on one idea and leaves everything else out. He names the pattern, gives the example, and stops. He never tells you why you should care — he trusts you to figure that out.",

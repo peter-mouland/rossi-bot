@@ -14,9 +14,10 @@ export function registerRunCommand(program) {
         console.log(`Digest: ${digestPath}\n`)
 
         for (const r of results) {
-          console.log(`  ${r.avatar}`)
-          console.log(`    Video ID:   ${r.videoId}`)
-          console.log(`    Status:     ${r.status}`)
+          console.log(`  ${r.avatar} — "${r.title}"`)
+          for (const s of r.submissions ?? []) {
+            console.log(`    ${`${s.analysis}/${s.typeId}`.padEnd(16)} ${s.videoId} (${s.status})`)
+          }
           console.log(`    Transcript: ${r.transcriptPath}`)
           console.log()
         }

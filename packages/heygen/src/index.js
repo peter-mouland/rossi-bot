@@ -10,7 +10,7 @@ function headers() {
   }
 }
 
-export async function submit(transcript, avatar, { title, dryRun = false } = {}) {
+export async function submit(transcript, avatar, { title, dryRun = false, motionEngine } = {}) {
   if (dryRun) {
     logger.info(`[DRY RUN] Skipping HeyGen submission for avatar: ${avatar.id}`)
     return { videoId: 'dry-run', status: 'dry-run' }
@@ -23,6 +23,7 @@ export async function submit(transcript, avatar, { title, dryRun = false } = {})
           type: 'avatar',
           avatar_id: avatar.heygenAvatarId,
           avatar_style: 'normal',
+          ...(motionEngine && { motion_engine: motionEngine }),
         },
         voice: {
           type: 'text',
@@ -31,7 +32,7 @@ export async function submit(transcript, avatar, { title, dryRun = false } = {})
         },
       },
     ],
-    dimension: { width: 854, height: 480 },
+    dimension: { width: 1280, height: 720 },
     ...(title && { title }),
   }
 

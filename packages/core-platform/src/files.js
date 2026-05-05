@@ -145,10 +145,10 @@ export async function saveDigest(results) {
   for (const result of results) {
     lines.push(`## ${result.avatar}`)
     if (result.title) lines.push(`**"${result.title}"**\n`)
-    lines.push(`- **Video ID:** \`${result.videoId}\``)
-    lines.push(`- **Status:** ${result.status}`)
+    for (const s of result.submissions ?? []) {
+      lines.push(`- **${s.analysis}/${s.typeId}:** \`${s.videoId}\` — ${s.status}`)
+    }
     lines.push(`- **Transcript:** ${result.transcriptPath}`)
-    lines.push(`- **Research:** ${result.researchPath}`)
     lines.push('')
   }
 

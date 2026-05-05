@@ -123,13 +123,26 @@ export async function run({ avatarId } = {}) {
       }
     }
 
-    // Always submit the teaser to HeyGen
-    let submission
-    try {
-      submission = await generator.submit(scripts['teaser'], avatar, { title, dryRun })
-      logger.info(`Video submitted: ${submission.videoId}`)
-    } catch (err) {
-      throw new Error(`[${avatar.name}] video submission failed (${avatar.generator}): ${err.message}`)
+    // Submit one video per type per analysis — both summary and full while we evaluate which to keep
+    const submissions = []
+    const toSubmit = [
+      { analysis: 'summary', scripts: summaryResult.scripts },
+      { analysis: 'full', scripts: fullResult.scripts },
+    ]
+    for (const { analysis, scripts: analysisScripts } of toSubmit) {
+      for (const [typeId, script] of Object.entries(analysisScripts)) {
+        const label = videoTypes[typeId]?.label ?? typeId
+        const videoTitle = `${title} (${label} — ${analysis})`
+        try {
+          const motionEngine = avatar.heygenMotionEngines?.[typeId]
+        const submitDryRun = dryRun || !motionEngine
+        const submission = await generator.submit(script, avatar, { title: videoTitle, dryRun: submitDryRun, motionEngine })
+          logger.info(`Video submitted (${analysis}/${typeId}): ${submission.videoId}`)
+          submissions.push({ analysis, typeId, ...submission })
+        } catch (err) {
+          throw new Error(`[${avatar.name}] video submission failed for ${analysis}/${typeId}: ${err.message}`)
+        }
+      }
     }
 
     results.push({
@@ -137,8 +150,7 @@ export async function run({ avatarId } = {}) {
       avatarId: avatar.id,
       title,
       transcriptPath,
-      videoId: submission.videoId,
-      status: submission.status,
+      submissions,
     })
   }
 
