@@ -54,6 +54,33 @@ Print the latest daily digest:
 pnpm --filter @rossi-bot/cli dev digest
 ```
 
+## Pipeline
+
+```
+Avatar Config
+     │
+     ▼
+runResearch (once, summary mode)
+  └── news APIs called once
+  └── findings + toolCalls (raw results stored)
+     │
+     ▼
+selectAngle (once — same angle for both)
+     │
+     ├─────────────────────────────────────────┐
+     ▼                                         ▼
+generateScripts                      generateScripts
+  findings only                        findings + rawSources
+  (structured summaries)               (full JSON tool results)
+     │                                         │
+     ▼                                         ▼
+"Summary Analysis"                   "Full Analysis"
+  in email                             in email
+     │
+     ▼
+HeyGen submission (summary scripts)
+```
+
 ## Video Types
 
 Defined in `config/video-types.json`. Add or edit types there — no code changes needed.

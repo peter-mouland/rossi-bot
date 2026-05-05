@@ -6,10 +6,9 @@ export function registerRunCommand(program) {
     .command('run')
     .description('Research trending content, generate scripts, and submit videos')
     .option('-a, --avatar <id>', 'Run for a specific avatar only')
-    .option('--research-mode <mode>', 'Tool result format passed to Claude: full (raw JSON) or summary (compact bullets)', 'summary')
     .action(async options => {
       try {
-        const { results, digestPath } = await run({ avatarId: options.avatar, researchMode: options.researchMode })
+        const { results, digestPath } = await run({ avatarId: options.avatar })
 
         console.log(`\n${results.length} video(s) submitted.`)
         console.log(`Digest: ${digestPath}\n`)

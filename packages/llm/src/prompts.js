@@ -42,12 +42,20 @@ Call \`select_angle\` with the index of the best candidate angle from the list p
 Apply the avatar's angle preference strictly — it is the editorial rule that overrides all other considerations.`
 }
 
-export function buildAllScriptsPrompt(avatar, videoTypes, { chosenAngle, findings }) {
+export function buildAllScriptsPrompt(avatar, videoTypes, { chosenAngle, findings, rawSources }) {
   const supportingSources = (chosenAngle.supportingSourceIndices ?? [])
     .map(i => findings.sources[i])
     .filter(Boolean)
     .map(s => `- **${s.title}** (${s.source}${s.publishedAt ? `, ${s.publishedAt}` : ''}): ${s.summary}`)
     .join('\n')
+
+  const rawSourcesBlock = rawSources?.length
+    ? '\n\n## Raw Source Data\nFull results from each search tool — use this detail to enrich your scripts:\n\n' +
+      rawSources
+        .filter(c => !c.error && c.result)
+        .map(c => `### ${c.tool} — \`${JSON.stringify(c.input)}\`\n\`\`\`json\n${JSON.stringify(c.result, null, 2)}\n\`\`\``)
+        .join('\n\n')
+    : ''
 
   const typeBlocks = Object.entries(videoTypes)
     .map(([id, vt]) => `### ${vt.label} (\`${id}\`)
@@ -87,7 +95,7 @@ ${typeBlocks}
 - Written in ${avatar.name}'s voice: ${avatar.toneOfVoice}
 - Pure spoken words only — no stage directions, no scene headings
 - Hit the word counts
-
+${rawSourcesBlock}
 ## Output Format
 \`\`\`title
 A short, specific, attention-grabbing title (max 60 chars) — shared across all formats

@@ -7,7 +7,7 @@ import { saveTranscripts, saveResearch, saveDigest, renderFindingsMarkdown, load
 // Each value must implement: submit(transcript, avatar), getStatus(videoId)
 const generators = { heygen }
 
-export async function run({ avatarId, researchMode = 'summary' } = {}) {
+export async function run({ avatarId } = {}) {
   const [avatars, videoTypes] = await Promise.all([
     avatarId ? loadAvatar(avatarId).then(a => [a].filter(Boolean)) : loadAvatars(),
     loadVideoTypes(),
@@ -30,15 +30,15 @@ export async function run({ avatarId, researchMode = 'summary' } = {}) {
 
     logger.info(`--- Processing: ${avatar.name} ---`)
 
-    // Research once per avatar — findings are shared across all video types
+    // Research runs once — both analyses are on the same topic
     let research
     try {
-      research = await runResearch(avatar, { researchMode })
+      research = await runResearch(avatar, { researchMode: 'summary' })
     } catch (err) {
       throw new Error(`[${avatar.name}] research failed: ${err.message}`)
     }
 
-    // Select the best angle from candidate angles using avatar's editorial preference
+    // Single angle selection — both scripts cover the same angle
     let chosenAngle
     try {
       chosenAngle = await selectAngle(avatar, research.findings)
@@ -46,14 +46,20 @@ export async function run({ avatarId, researchMode = 'summary' } = {}) {
       throw new Error(`[${avatar.name}] angle selection failed: ${err.message}`)
     }
 
-    // Generate all scripts in one call, sharing the same topic and title
-    let title, scripts
+    // Generate scripts twice in parallel — same topic, same angle, different context depth
+    // Summary: structured findings only (cheap); Full: + raw tool call results (richer detail)
+    let summaryResult, fullResult
     try {
-      ;({ title, scripts } = await generateScripts(avatar, videoTypes, { chosenAngle, findings: research.findings }))
-      logger.info(`  Title: ${title}`)
+      ;[summaryResult, fullResult] = await Promise.all([
+        generateScripts(avatar, videoTypes, { chosenAngle, findings: research.findings }),
+        generateScripts(avatar, videoTypes, { chosenAngle, findings: research.findings, rawSources: research.toolCalls }),
+      ])
+      logger.info(`  Title: ${summaryResult.title}`)
     } catch (err) {
       throw new Error(`[${avatar.name}] script generation failed: ${err.message}`)
     }
+
+    const { title, scripts } = summaryResult
 
     // Save research report and single transcript file
     let transcriptPath
@@ -67,10 +73,27 @@ export async function run({ avatarId, researchMode = 'summary' } = {}) {
       throw new Error(`[${avatar.name}] saving output failed: ${err.message}`)
     }
 
-    // Email transcript to output validators
+    // Email both analyses so we can compare how context depth affects script output
     if (avatar.outputValidators?.length) {
-      const transcriptContent = await import('fs/promises').then(fs => fs.readFile(transcriptPath, 'utf-8'))
-      const emailBody = `${transcriptContent}\n\n---\n\n## Chosen Angle\n\n**${chosenAngle.angle}**\n\n${chosenAngle.rationale}\n\n*${chosenAngle.selectionRationale}*\n\n---\n\n## Research\n\n${renderFindingsMarkdown(research.findings)}`
+      const buildSection = (heading, result) => {
+        const scriptBlocks = Object.entries(result.scripts)
+          .map(([typeId, script]) => `### ${videoTypes[typeId]?.label ?? typeId}\n\n${script}`)
+          .join('\n\n---\n\n')
+        return [`## ${heading}`, scriptBlocks].join('\n\n')
+      }
+
+      const emailBody = [
+        `# ${avatar.name} — ${title}`,
+        `**Angle:** ${chosenAngle.angle}`,
+        `*${chosenAngle.rationale}*`,
+        '',
+        `## Research\n\n${renderFindingsMarkdown(research.findings)}`,
+        '---',
+        buildSection('Summary Analysis', summaryResult),
+        '---',
+        buildSection('Full Analysis', fullResult),
+      ].join('\n\n')
+
       for (const email of avatar.outputValidators) {
         try {
           await sendEmail(avatar.fromEmail, email, `[${avatar.name}] ${title}`, emailBody)
