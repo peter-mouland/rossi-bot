@@ -1,4 +1,4 @@
-async function search({ tag, maxResults = 10 }) {
+async function search({ tag, maxResults = 5 }) {
   const url = new URL('https://dev.to/api/articles')
   url.searchParams.set('tag', tag.toLowerCase().replace(/\s+/g, ''))
   url.searchParams.set('per_page', String(maxResults))
@@ -17,7 +17,7 @@ async function search({ tag, maxResults = 10 }) {
       tags: a.tag_list,
       reactions: a.positive_reactions_count,
       comments: a.comments_count,
-      publishedAt: a.published_at,
+      publishedAt: a.published_at?.slice(0, 10),
     })),
   }
 }
@@ -33,7 +33,7 @@ export const definition = {
     type: 'object',
     properties: {
       tag: { type: 'string', description: 'Dev.to tag to search (e.g. "react", "typescript", "css", "webdev")' },
-      maxResults: { type: 'number', description: 'Number of results to return (default: 10)' },
+      maxResults: { type: 'number', description: 'Number of results to return (default: 5)' },
     },
     required: ['tag'],
   },

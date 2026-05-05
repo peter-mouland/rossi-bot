@@ -1,4 +1,4 @@
-async function search({ query, maxResults = 10 }) {
+async function search({ query, maxResults = 5 }) {
   const url = new URL('https://hn.algolia.com/api/v1/search')
   url.searchParams.set('query', query)
   url.searchParams.set('tags', 'story')
@@ -16,7 +16,7 @@ async function search({ query, maxResults = 10 }) {
       points: h.points,
       comments: h.num_comments,
       author: h.author,
-      date: h.created_at,
+      publishedAt: h.created_at?.slice(0, 10),
     })),
   }
 }
@@ -32,7 +32,7 @@ export const definition = {
     type: 'object',
     properties: {
       query: { type: 'string', description: 'Search query' },
-      maxResults: { type: 'number', description: 'Number of results to return (default: 10)' },
+      maxResults: { type: 'number', description: 'Number of results to return (default: 5)' },
     },
     required: ['query'],
   },

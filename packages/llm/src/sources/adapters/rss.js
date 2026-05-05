@@ -13,17 +13,18 @@ function parseItems(xml) {
     const block = match[1]
     const title = extractTag(block, 'title')
     if (!title) continue
+    const description = extractTag(block, 'description')
     items.push({
       title,
       url: extractTag(block, 'link'),
-      description: extractTag(block, 'description'),
+      description: description ? description.slice(0, 200) : null,
       publishedAt: extractTag(block, 'pubDate'),
     })
   }
   return items
 }
 
-export async function searchRss({ url, keyword, maxResults = 10 }) {
+export async function searchRss({ url, keyword, maxResults = 5 }) {
   const res = await fetch(url, { headers: { 'User-Agent': 'rossi-bot/1.0' } })
   if (!res.ok) throw new Error(`RSS fetch failed (${url}): ${res.status}`)
 

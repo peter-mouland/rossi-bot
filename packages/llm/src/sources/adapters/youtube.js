@@ -1,6 +1,6 @@
 import { getConfig } from '@rossi-bot/core-platform'
 
-async function search({ query, maxResults = 10, region = 'US' }) {
+async function search({ query, maxResults = 5, region = 'US' }) {
   const { youtubeApiKey } = getConfig()
 
   const url = new URL('https://www.googleapis.com/youtube/v3/search')
@@ -21,8 +21,8 @@ async function search({ query, maxResults = 10, region = 'US' }) {
   return (data.items ?? []).map(item => ({
     title: item.snippet.title,
     channel: item.snippet.channelTitle,
-    description: item.snippet.description,
-    publishedAt: item.snippet.publishedAt,
+    description: item.snippet.description.slice(0, 200),
+    publishedAt: item.snippet.publishedAt.slice(0, 10),
     videoId: item.id.videoId,
     url: `https://youtube.com/watch?v=${item.id.videoId}`,
   }))
@@ -39,7 +39,7 @@ export const definition = {
     type: 'object',
     properties: {
       query: { type: 'string', description: 'Search query' },
-      maxResults: { type: 'number', description: 'Number of results to return (default: 10, max: 20)' },
+      maxResults: { type: 'number', description: 'Number of results to return (default: 5)' },
     },
     required: ['query'],
   },

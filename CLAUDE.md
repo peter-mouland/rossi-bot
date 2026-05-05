@@ -55,10 +55,11 @@ The CLI maps that string to the package at `apps/cli/src/runner.js`.
 
 1. Create `packages/avatars/<id>/config.json`
 2. Required fields: `id`, `name`, `generator`, `toneOfVoice`, `topicOfExpertise`, `subTopics[]`
-3. Add generator-specific fields (e.g. `heygenAvatarId`, `heygenVoiceId`)
-4. Optional: `fromEmail` — sender address for this avatar (must be verified in Resend)
-5. Optional: `outputValidators[]` — array of email addresses to receive the transcript after each run
-5. All avatar-specific files (prompts, assets, overrides) live in that same directory
+3. Add `anglePreference` — a plain-English editorial rule used to pick the best angle from research candidates (e.g. `"Always lead with the practitioner angle — lived experience, not theory"`)
+4. Add generator-specific fields (e.g. `heygenAvatarId`, `heygenVoiceId`)
+5. Optional: `fromEmail` — sender address for this avatar (must be verified in Resend)
+6. Optional: `outputValidators[]` — array of email addresses to receive the transcript after each run
+7. All avatar-specific files (prompts, assets, overrides) live in that same directory
 
 ## Adding a New Generator
 
@@ -68,7 +69,7 @@ The CLI maps that string to the package at `apps/cli/src/runner.js`.
 
 ## Adding a New Search Tool
 
-Each adapter is fully self-contained. Create `packages/llm/src/adapters/<name>.js` exporting:
+Each adapter is fully self-contained. Create `packages/llm/src/sources/adapters/<name>.js` exporting:
 
 ```js
 export const guidance = 'search_name — one-line description for the research prompt'
@@ -82,7 +83,7 @@ export const definition = {
 export const execute = (input, ctx) => { ... }  // ctx has { region }
 ```
 
-Then register it in `packages/llm/src/tools.js`:
+Then register it in `packages/llm/src/sources/index.js`:
 
 ```js
 import * as mySource from './adapters/<name>.js'
@@ -104,6 +105,8 @@ import { searchRss } from './rss.js'
 export const execute = (input) => searchRss({ ...input, url: 'https://example.com/rss' })
 ```
 
+Adapters should default `maxResults` to 5. Claude requests more explicitly if needed.
+
 ### Available sources
 
 | Source id | Adapter | Notes |
@@ -121,26 +124,59 @@ export const execute = (input) => searchRss({ ...input, url: 'https://example.co
 ## Pipeline (per avatar, nightly)
 
 ```
-1. llm.runResearch(avatar)
-   └── Claude uses avatar's newsSources tools to find trending content → structured findings
+1. llm.runResearch(avatar, { researchMode })
+   └── Agentic loop: Claude calls newsSources tools, then report_findings
+       → { sources[], trendingTopics[], candidateAngles[] }
 
-2. llm.generateScripts(avatar, videoTypes, findings)
-   └── Claude writes teaser + summary + deep-dive scripts on one shared topic and title
+2. llm.selectAngle(avatar, findings)
+   └── Haiku call with tool_choice: forces select_angle tool
+       Uses avatar.anglePreference to pick one candidateAngle
+       → { angle, rationale, selectionRationale }
 
-3. core-platform.saveResearch(avatar, research)
+3. llm.generateScripts(avatar, videoTypes, { chosenAngle, findings })
+   └── Opus call: writes teaser + summary + deep-dive on the chosen angle
+       → { title, scripts: { teaser, summary, deep-dive } }
+
+4. core-platform.saveResearch(avatar, research)
    └── packages/avatars/<id>/research/<date>.md
 
-4. core-platform.saveTranscripts(avatar, title, scripts, videoTypes)
-   └── packages/avatars/<id>/transcripts/<date>-<slug>.md  (single file, all formats)
+5. core-platform.saveTranscripts(avatar, title, scripts, videoTypes)
+   └── packages/avatars/<id>/transcripts/<date>-<slug>.md
 
-5. generator.submit(teaserScript, avatar)
+6. generator.submit(teaserScript, avatar)
    └── submits to video service → returns { videoId }
 
-6. sendEmail(fromEmail, validator, subject, body)
-   └── emails transcript + research findings to each outputValidator
+7. sendEmail(fromEmail, validator, subject, body)
+   └── emails transcript + chosen angle + research to each outputValidator
 
-7. core-platform.saveDigest(results)
+8. core-platform.saveDigest(results)
    └── output/digests/<date>.md
+```
+
+## CLI Commands
+
+```bash
+# Run the full pipeline for all avatars
+pnpm --filter @rossi-bot/cli dev -- run
+
+# Run for a single avatar
+pnpm --filter @rossi-bot/cli dev -- run --avatar aria
+
+# Compare research quality: full raw JSON vs compact summaries passed to Claude
+pnpm --filter @rossi-bot/cli dev -- run --avatar aria --research-mode full
+pnpm --filter @rossi-bot/cli dev -- run --avatar aria --research-mode summary
+```
+
+`--research-mode` controls how tool results are injected into the research conversation:
+- `summary` (default) — compact bullet list (~80 tokens per call); prevents context overflow on avatars with many sources
+- `full` — raw `JSON.stringify` of the complete result set (~800 tokens per call); use to compare research depth or debug tool output
+
+```bash
+# Skip video submission (research + scripts only)
+DRY_RUN=true pnpm --filter @rossi-bot/cli dev -- run
+
+# Verbose logging
+LOG_LEVEL=debug pnpm --filter @rossi-bot/cli dev -- run --avatar pete
 ```
 
 ## Agent Readiness

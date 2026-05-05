@@ -1,13 +1,13 @@
 import { loadAvatars, loadAvatar } from '@rossi-bot/avatars'
-import { runResearch, generateScripts } from '@rossi-bot/llm'
+import { runResearch, selectAngle, generateScripts } from '@rossi-bot/llm'
 import * as heygen from '@rossi-bot/heygen'
-import { saveTranscripts, saveResearch, saveDigest, loadVideoTypes, sendEmail, logger } from '@rossi-bot/core-platform'
+import { saveTranscripts, saveResearch, saveDigest, renderFindingsMarkdown, loadVideoTypes, sendEmail, logger } from '@rossi-bot/core-platform'
 
 // Register generators here as new packages are added.
 // Each value must implement: submit(transcript, avatar), getStatus(videoId)
 const generators = { heygen }
 
-export async function run({ avatarId } = {}) {
+export async function run({ avatarId, researchMode = 'summary' } = {}) {
   const [avatars, videoTypes] = await Promise.all([
     avatarId ? loadAvatar(avatarId).then(a => [a].filter(Boolean)) : loadAvatars(),
     loadVideoTypes(),
@@ -33,15 +33,23 @@ export async function run({ avatarId } = {}) {
     // Research once per avatar — findings are shared across all video types
     let research
     try {
-      research = await runResearch(avatar)
+      research = await runResearch(avatar, { researchMode })
     } catch (err) {
       throw new Error(`[${avatar.name}] research failed: ${err.message}`)
+    }
+
+    // Select the best angle from candidate angles using avatar's editorial preference
+    let chosenAngle
+    try {
+      chosenAngle = await selectAngle(avatar, research.findings)
+    } catch (err) {
+      throw new Error(`[${avatar.name}] angle selection failed: ${err.message}`)
     }
 
     // Generate all scripts in one call, sharing the same topic and title
     let title, scripts
     try {
-      ;({ title, scripts } = await generateScripts(avatar, videoTypes, research.findings))
+      ;({ title, scripts } = await generateScripts(avatar, videoTypes, { chosenAngle, findings: research.findings }))
       logger.info(`  Title: ${title}`)
     } catch (err) {
       throw new Error(`[${avatar.name}] script generation failed: ${err.message}`)
@@ -62,7 +70,7 @@ export async function run({ avatarId } = {}) {
     // Email transcript to output validators
     if (avatar.outputValidators?.length) {
       const transcriptContent = await import('fs/promises').then(fs => fs.readFile(transcriptPath, 'utf-8'))
-      const emailBody = `${transcriptContent}\n\n---\n\n## Research\n\n${research.findings}`
+      const emailBody = `${transcriptContent}\n\n---\n\n## Chosen Angle\n\n**${chosenAngle.angle}**\n\n${chosenAngle.rationale}\n\n*${chosenAngle.selectionRationale}*\n\n---\n\n## Research\n\n${renderFindingsMarkdown(research.findings)}`
       for (const email of avatar.outputValidators) {
         try {
           await sendEmail(avatar.fromEmail, email, `[${avatar.name}] ${title}`, emailBody)

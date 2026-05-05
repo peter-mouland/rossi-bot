@@ -49,6 +49,41 @@ export async function saveTranscripts(avatar, title, scripts, videoTypes) {
   return path
 }
 
+export function renderFindingsMarkdown(findings) {
+  const lines = []
+
+  if (Array.isArray(findings.trendingTopics) && findings.trendingTopics.length) {
+    lines.push('## Trending Topics\n')
+    for (const t of findings.trendingTopics) {
+      lines.push(`### ${t.topic}`)
+      lines.push(t.momentum)
+      lines.push('')
+    }
+  }
+
+  if (Array.isArray(findings.candidateAngles) && findings.candidateAngles.length) {
+    lines.push('## Candidate Angles\n')
+    for (const [i, a] of findings.candidateAngles.entries()) {
+      lines.push(`${i + 1}. **${a.angle}**`)
+      lines.push(`   ${a.rationale}`)
+      lines.push('')
+    }
+  }
+
+  if (Array.isArray(findings.sources) && findings.sources.length) {
+    lines.push('## Sources\n')
+    for (const s of findings.sources) {
+      const date = s.publishedAt ? ` — ${s.publishedAt}` : ''
+      const signal = s.relevanceSignal ? ` [${s.relevanceSignal}]` : ''
+      lines.push(`- **[${s.title}](${s.url})** (${s.source}${date})${signal}`)
+      if (s.summary) lines.push(`  ${s.summary}`)
+      lines.push('')
+    }
+  }
+
+  return lines.join('\n')
+}
+
 export async function saveResearch(avatar, research) {
   const date = today()
   const dir = join(avatar.dir, 'research')
@@ -59,9 +94,7 @@ export async function saveResearch(avatar, research) {
   ]
 
   if (research.findings) {
-    lines.push(`## Findings\n`)
-    lines.push(research.findings)
-    lines.push('')
+    lines.push(renderFindingsMarkdown(research.findings))
   }
 
   lines.push(`## Tool Calls (${research.toolCalls.length})\n`)

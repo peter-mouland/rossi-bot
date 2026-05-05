@@ -1,9 +1,10 @@
-import { getClient } from './client.js'
-import { buildAllScriptsPrompt, extractTitle, extractScript } from './prompts.js'
+import { getClient } from '../client.js'
+import { buildAllScriptsPrompt, extractTitle, extractScript } from '../prompts.js'
 import { logger } from '@rossi-bot/core-platform'
 
 // Returns { title, scripts: { teaser, summary, 'deep-dive' } }
-export async function generateScripts(avatar, videoTypes, findings) {
+// context = { chosenAngle, findings }
+export async function generateScripts(avatar, videoTypes, context) {
   const client = getClient()
 
   logger.info(`Generating scripts for: ${avatar.name}`)
@@ -11,7 +12,7 @@ export async function generateScripts(avatar, videoTypes, findings) {
   const response = await client.messages.create({
     model: 'claude-opus-4-6',
     max_tokens: 8096,
-    system: buildAllScriptsPrompt(avatar, videoTypes, findings),
+    system: buildAllScriptsPrompt(avatar, videoTypes, context),
     messages: [
       {
         role: 'user',

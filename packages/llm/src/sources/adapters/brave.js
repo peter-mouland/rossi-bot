@@ -1,6 +1,6 @@
 import { getConfig } from '@rossi-bot/core-platform'
 
-async function search({ query, maxResults = 10, region = 'us' }) {
+async function search({ query, maxResults = 5, region = 'us' }) {
   const { braveApiKey } = getConfig()
 
   const url = new URL('https://api.search.brave.com/res/v1/web/search')
@@ -39,7 +39,7 @@ export const definition = {
     type: 'object',
     properties: {
       query: { type: 'string', description: 'Search query' },
-      maxResults: { type: 'number', description: 'Number of results to return (default: 10)' },
+      maxResults: { type: 'number', description: 'Number of results to return (default: 5)' },
     },
     required: ['query'],
   },

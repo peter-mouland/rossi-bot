@@ -1,4 +1,4 @@
-import { getSourceGuidance } from './tools.js'
+import { getSourceGuidance } from './sources/index.js'
 
 function currentDate() {
   return new Date().toISOString().split('T')[0]
@@ -24,25 +24,31 @@ Today's date is ${currentDate()}. Use this when constructing search queries — 
 
 ## Your Task
 ${sourceList}
-${sources.length + 1}. Synthesise your findings into a structured research summary
+${sources.length + 1}. Call \`report_findings\` with your structured research output
 
-## Output Format
-Return only the research findings — no script. Use exactly this structure:
-
-\`\`\`findings
-## What's Trending
-[bullet points of trending topics/queries and their momentum]
-
-## Top Content Found
-[list of most relevant videos and articles with key takeaways]
-
-## Chosen Angle
-[the single most timely and relevant angle for ${avatar.name} to cover, and why]
-\`\`\``
+Provide 2–4 candidate angles. Each must be meaningfully distinct.`
 }
 
-// videoTypes = { teaser: { label, durationSeconds, approxWords, description }, ... }
-export function buildAllScriptsPrompt(avatar, videoTypes, findings) {
+export function buildAngleSelectionPrompt(avatar) {
+  return `You are an editorial assistant for ${avatar.name}.
+
+## Avatar Profile
+- **Name:** ${avatar.name}
+- **Topic of Expertise:** ${avatar.topicOfExpertise}
+- **Angle Preference:** ${avatar.anglePreference}
+
+## Your Task
+Call \`select_angle\` with the index of the best candidate angle from the list provided.
+Apply the avatar's angle preference strictly — it is the editorial rule that overrides all other considerations.`
+}
+
+export function buildAllScriptsPrompt(avatar, videoTypes, { chosenAngle, findings }) {
+  const supportingSources = (chosenAngle.supportingSourceIndices ?? [])
+    .map(i => findings.sources[i])
+    .filter(Boolean)
+    .map(s => `- **${s.title}** (${s.source}${s.publishedAt ? `, ${s.publishedAt}` : ''}): ${s.summary}`)
+    .join('\n')
+
   const typeBlocks = Object.entries(videoTypes)
     .map(([id, vt]) => `### ${vt.label} (\`${id}\`)
 ${vt.description}
@@ -61,11 +67,17 @@ Today's date is ${currentDate()}.
 - **Tone of Voice:** ${avatar.toneOfVoice}
 - **Region:** ${avatar.region}
 
-## Research Findings
-${findings}
+## Angle to Cover
+${chosenAngle.angle}
+
+**Why this angle:** ${chosenAngle.rationale}
+**Editorial note:** ${chosenAngle.selectionRationale}
+
+## Primary Sources
+${supportingSources || 'No specific sources flagged — use your judgement from the research.'}
 
 ## Your Task
-Write all three video formats on the SAME topic and angle from the research above.
+Write all three video formats on the SAME topic and angle above.
 One title covers all three formats — they are the teaser, summary, and deep-dive of the same video series.
 
 ## Video Formats
@@ -74,7 +86,7 @@ ${typeBlocks}
 ## Requirements for all scripts
 - Written in ${avatar.name}'s voice: ${avatar.toneOfVoice}
 - Pure spoken words only — no stage directions, no scene headings
-- Hit the word counts precisely
+- Hit the word counts
 
 ## Output Format
 \`\`\`title
@@ -82,11 +94,6 @@ A short, specific, attention-grabbing title (max 60 chars) — shared across all
 \`\`\`
 
 ${outputBlocks}`
-}
-
-export function extractFindings(text) {
-  const match = text.match(/```findings\n([\s\S]*?)\n```/)
-  return match ? match[1].trim() : text.trim()
 }
 
 export function extractTitle(text) {

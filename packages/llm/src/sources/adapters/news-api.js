@@ -1,4 +1,4 @@
-async function search({ query, maxResults = 10 }) {
+async function search({ query, maxResults = 5 }) {
   const apiKey = process.env.NEWS_API_KEY
   if (!apiKey) throw new Error('Missing NEWS_API_KEY')
 
@@ -38,7 +38,7 @@ export const definition = {
     type: 'object',
     properties: {
       query: { type: 'string', description: 'Search query' },
-      maxResults: { type: 'number', description: 'Number of results to return (default: 10)' },
+      maxResults: { type: 'number', description: 'Number of results to return (default: 5)' },
     },
     required: ['query'],
   },

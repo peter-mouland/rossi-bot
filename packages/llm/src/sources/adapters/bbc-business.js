@@ -9,7 +9,7 @@ export const definition = {
     type: 'object',
     properties: {
       keyword: { type: 'string', description: 'Optional keyword to filter results' },
-      maxResults: { type: 'number', description: 'Number of results to return (default: 10)' },
+      maxResults: { type: 'number', description: 'Number of results to return (default: 5)' },
     },
     required: [],
   },

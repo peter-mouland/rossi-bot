@@ -83,3 +83,7 @@ Default type is `teaser`.
 
 1. Add an entry to `config/video-types.json` with `label`, `durationSeconds`, `approxWords`, and `description`
 2. Use it immediately with `--type <key>`
+
+# todo
+
+full integrtion with RSS feeds found here: https://rss.feedspot.com/

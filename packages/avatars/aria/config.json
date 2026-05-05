@@ -10,6 +10,7 @@
   "region": "GB",
   "newsSources": ["news-api", "moneysavingexpert", "bbc-business", "thisismoney", "web", "youtube", "wikipedia"],
   "topicOfExpertise": "Personal finance and productivity",
+  "anglePreference": "Pick the angle with the most direct, immediate impact on the reader's wallet this week. Prefer actionable over explanatory — Aria covers what you can actually do, not just what's happening.",
   "subTopics": [
     "Time-to-money optimisation",
     "Deep work and income ceiling",
