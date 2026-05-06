@@ -59,12 +59,22 @@ export async function saveTranscripts(avatar, title, scripts, videoTypes, produc
 
 export function renderFindingsMarkdown(findings) {
   const lines = []
+  const sources = findings.sources ?? []
+
+  function renderSource(s) {
+    const date = s.publishedAt ? ` — ${s.publishedAt}` : ''
+    return `  - **[${s.title}](${s.url})** (${s.source}${date})`
+  }
 
   if (Array.isArray(findings.trendingTopics) && findings.trendingTopics.length) {
     lines.push('## Trending Topics\n')
     for (const t of findings.trendingTopics) {
       lines.push(`### ${t.topic}`)
       lines.push(t.momentum)
+      const evidence = (t.evidenceIndices ?? []).map(i => sources[i]).filter(Boolean)
+      if (evidence.length) {
+        for (const s of evidence) lines.push(renderSource(s))
+      }
       lines.push('')
     }
   }
@@ -74,17 +84,10 @@ export function renderFindingsMarkdown(findings) {
     for (const [i, a] of findings.candidateAngles.entries()) {
       lines.push(`${i + 1}. **${a.angle}**`)
       lines.push(`   ${a.rationale}`)
-      lines.push('')
-    }
-  }
-
-  if (Array.isArray(findings.sources) && findings.sources.length) {
-    lines.push('## Sources\n')
-    for (const s of findings.sources) {
-      const date = s.publishedAt ? ` — ${s.publishedAt}` : ''
-      const signal = s.relevanceSignal ? ` [${s.relevanceSignal}]` : ''
-      lines.push(`- **[${s.title}](${s.url})** (${s.source}${date})${signal}`)
-      if (s.summary) lines.push(`  ${s.summary}`)
+      const supporting = (a.supportingSourceIndices ?? []).map(i => sources[i]).filter(Boolean)
+      if (supporting.length) {
+        for (const s of supporting) lines.push(renderSource(s))
+      }
       lines.push('')
     }
   }

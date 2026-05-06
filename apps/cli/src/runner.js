@@ -134,9 +134,7 @@ export async function run({ avatarId } = {}) {
         const label = videoTypes[typeId]?.label ?? typeId
         const videoTitle = `${title} (${label} — ${analysis})`
         try {
-          const motionEngine = avatar.heygenMotionEngines?.[typeId]
-        const submitDryRun = dryRun || !motionEngine
-        const submission = await generator.submit(script, avatar, { title: videoTitle, dryRun: submitDryRun, motionEngine })
+          const submission = await generator.submit(script, avatar, { title: videoTitle, dryRun, typeId })
           logger.info(`Video submitted (${analysis}/${typeId}): ${submission.videoId}`)
           submissions.push({ analysis, typeId, ...submission })
         } catch (err) {

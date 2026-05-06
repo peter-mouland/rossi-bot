@@ -128,7 +128,7 @@ export async function runResearch(avatar, { researchMode = 'summary' } = {}) {
         logger.info(`Tool: ${block.name} ${JSON.stringify(block.input)}`)
 
         try {
-          const result = await executeTool(block.name, block.input, { region: avatar.region })
+          const result = await executeTool(block.name, block.input, { region: avatar.region, youtubeMinLikes: avatar.youtubeMinLikes })
           const content = researchMode === 'full'
             ? JSON.stringify(result)
             : summariseToolResult(block.name, result)

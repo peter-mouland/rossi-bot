@@ -6,7 +6,22 @@ function sevenDaysAgo() {
   return d.toISOString()
 }
 
-async function search({ query, maxResults = 5, region = 'US' }) {
+async function fetchStatistics(videoIds, youtubeApiKey) {
+  const url = new URL('https://www.googleapis.com/youtube/v3/videos')
+  url.searchParams.set('part', 'statistics')
+  url.searchParams.set('id', videoIds.join(','))
+  url.searchParams.set('key', youtubeApiKey)
+
+  const response = await fetch(url)
+  if (!response.ok) return {}
+
+  const data = await response.json()
+  return Object.fromEntries(
+    (data.items ?? []).map(item => [item.id, item.statistics])
+  )
+}
+
+async function search({ query, maxResults = 5, region = 'US', minLikes = 1000 }) {
   const { youtubeApiKey } = getConfig()
 
   const url = new URL('https://www.googleapis.com/youtube/v3/search')
@@ -25,14 +40,27 @@ async function search({ query, maxResults = 5, region = 'US' }) {
   }
 
   const data = await response.json()
-  return (data.items ?? []).map(item => ({
-    title: item.snippet.title,
-    channel: item.snippet.channelTitle,
-    description: item.snippet.description.slice(0, 200),
-    publishedAt: item.snippet.publishedAt.slice(0, 10),
-    videoId: item.id.videoId,
-    url: `https://youtube.com/watch?v=${item.id.videoId}`,
-  }))
+  const items = data.items ?? []
+  if (!items.length) return []
+
+  const videoIds = items.map(item => item.id.videoId)
+  const stats = await fetchStatistics(videoIds, youtubeApiKey)
+
+  return items
+    .map(item => {
+      const s = stats[item.id.videoId] ?? {}
+      return {
+        title: item.snippet.title,
+        channel: item.snippet.channelTitle,
+        description: item.snippet.description.slice(0, 200),
+        publishedAt: item.snippet.publishedAt.slice(0, 10),
+        videoId: item.id.videoId,
+        url: `https://youtube.com/watch?v=${item.id.videoId}`,
+        likeCount: Number(s.likeCount ?? 0),
+        viewCount: Number(s.viewCount ?? 0),
+      }
+    })
+    .filter(v => v.likeCount >= minLikes)
 }
 
 export const guidance = 'search_youtube — find top videos on the most relevant trending angle'
@@ -52,4 +80,5 @@ export const definition = {
   },
 }
 
-export const execute = (input, { region } = {}) => search({ ...input, region })
+export const execute = (input, { region, youtubeMinLikes } = {}) =>
+  search({ ...input, region, ...(youtubeMinLikes != null && { minLikes: youtubeMinLikes }) })

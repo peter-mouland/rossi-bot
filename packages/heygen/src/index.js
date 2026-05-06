@@ -10,35 +10,31 @@ function headers() {
   }
 }
 
-export async function submit(transcript, avatar, { title, dryRun = false, motionEngine } = {}) {
-  if (dryRun) {
-    logger.info(`[DRY RUN] Skipping HeyGen submission for avatar: ${avatar.id}`)
+export async function submit(transcript, avatar, { title, dryRun = false, typeId } = {}) {
+  const motionEngine = typeId
+    ? avatar.heygenMotionEngines?.[typeId]
+    : avatar.heygenMotionEngine
+
+  if (dryRun || !motionEngine) {
+    logger.info(`[DRY RUN] Skipping HeyGen submission for avatar: ${avatar.id}${typeId ? ` (${typeId})` : ''}`)
     return { videoId: 'dry-run', status: 'dry-run' }
   }
 
+  const paddedScript = `<break time="0.5s"/>${transcript}<break time="0.5s"/>`
+
   const body = {
-    video_inputs: [
-      {
-        character: {
-          type: 'avatar',
-          avatar_id: avatar.heygenAvatarId,
-          avatar_style: 'normal',
-          ...(motionEngine && { motion_engine: motionEngine }),
-        },
-        voice: {
-          type: 'text',
-          voice_id: avatar.heygenVoiceId,
-          input_text: transcript,
-        },
-      },
-    ],
-    dimension: { width: 1280, height: 720 },
+    type: 'avatar',
+    avatar_id: avatar.heygenAvatarId,
+    voice_id: avatar.heygenVoiceId,
+    script: paddedScript,
+    engine: motionEngine,
+    resolution: '720p',
     ...(title && { title }),
   }
 
   logger.info(`Submitting to HeyGen for avatar: ${avatar.id}`)
 
-  const response = await fetch(`${BASE_URL}/v2/video/generate`, {
+  const response = await fetch(`${BASE_URL}/v3/videos`, {
     method: 'POST',
     headers: headers(),
     body: JSON.stringify(body),

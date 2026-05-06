@@ -3,12 +3,12 @@
   "name": "Pete",
   "generator": "heygen",
   "fromEmail": "pete@the-gist.uk",
-  "outputValidators": ["ro55graham@btinternet.com", "uni_nake@hotmail.com"],
+  "outputValidators": ["uni_nake@hotmail.com"],
   "heygenAvatarId": "42e99c99f7d84f97a5d1a1a550203b7c",
   "heygenVoiceId": "475615105d7649baa946712134448d56",
   "heygenMotionEngines": {
-    "teaser": "avatar_v5",
-    "summary": "avatar_v5",
+    "teaser": "avatar_v",
+    "summary": "",
     "deep-dive": ""
   },
   "region": "GB",
