@@ -135,6 +135,40 @@ export async function saveResearch(avatar, research) {
   return path
 }
 
+// Parses a saved transcript markdown file back into { title, scripts }
+// scripts keys are derived from section headings: "Deep Dive" → "deep-dive"
+export function parseTranscript(markdown) {
+  const lines = markdown.split('\n')
+  const title = lines[0]?.replace(/^#\s+/, '').trim() ?? ''
+  const scripts = {}
+
+  let currentId = null
+  let buffer = []
+
+  const flush = () => {
+    if (currentId) {
+      scripts[currentId] = buffer
+        .filter(l => !l.startsWith('>'))
+        .join('\n')
+        .trim()
+    }
+  }
+
+  for (const line of lines.slice(2)) {
+    if (line.startsWith('## ')) {
+      flush()
+      const label = line.slice(3).trim()
+      currentId = label.toLowerCase().replace(/\s+/g, '-')
+      buffer = []
+    } else {
+      buffer.push(line)
+    }
+  }
+  flush()
+
+  return { title, scripts }
+}
+
 export async function saveDigest(results) {
   const date = today()
   const dir = join(outputDir(), 'digests')

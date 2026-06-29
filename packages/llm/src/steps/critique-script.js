@@ -16,12 +16,11 @@ async function loadExampleScript(avatar) {
 // Takes generated scripts and voice rules, returns revised scripts with AI tells removed.
 // Uses Haiku for speed and cost — targeted line-level fixes, not rewrites.
 export async function critiqueScripts(avatar, videoTypes, scripts) {
-  if (!avatar.voiceRules?.length) return scripts
+  if (!avatar.prompts?.script) return scripts
 
   const client = getClient()
   logger.info(`  Critiquing scripts for: ${avatar.name}`)
 
-  const rulesText = avatar.voiceRules.map((r, i) => `${i + 1}. ${r}`).join('\n')
   const exampleScript = await loadExampleScript(avatar)
 
   const exampleBlock = exampleScript
@@ -40,8 +39,7 @@ export async function critiqueScripts(avatar, videoTypes, scripts) {
         role: 'user',
         content: `You are an editor for ${avatar.name}.
 
-## Voice Rules
-${rulesText}
+${avatar.prompts.script}
 ${exampleBlock}
 ## Scripts to Edit
 ${scriptBlocks}

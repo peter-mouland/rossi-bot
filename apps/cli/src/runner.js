@@ -134,7 +134,8 @@ export async function run({ avatarId } = {}) {
         const label = videoTypes[typeId]?.label ?? typeId
         const videoTitle = `${title} (${label} — ${analysis})`
         try {
-          const submission = await generator.submit(script, avatar, { title: videoTitle, dryRun, typeId })
+          const orientation = videoTypes[typeId]?.orientation
+          const submission = await generator.submit(script, avatar, { title: videoTitle, dryRun, typeId, orientation })
           logger.info(`Video submitted (${analysis}/${typeId}): ${submission.videoId}`)
           submissions.push({ analysis, typeId, ...submission })
         } catch (err) {

@@ -8,6 +8,7 @@ import { Command } from 'commander'
 import { registerRunCommand } from './commands/run.js'
 import { registerDigestCommand } from './commands/digest.js'
 import { registerStatusCommand } from './commands/status.js'
+import { registerSubmitCommand } from './commands/submit.js'
 
 const program = new Command()
 
@@ -19,5 +20,6 @@ program
 registerRunCommand(program)
 registerDigestCommand(program)
 registerStatusCommand(program)
+registerSubmitCommand(program)
 
 program.parseAsync()

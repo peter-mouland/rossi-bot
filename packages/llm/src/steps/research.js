@@ -78,7 +78,7 @@ export async function runResearch(avatar, { researchMode = 'summary' } = {}) {
   const messages = [
     {
       role: 'user',
-      content: `Research what's trending in "${avatar.topicOfExpertise}" right now for a ${avatar.region} audience.`,
+      content: `Research what's trending this week for ${avatar.name}'s ${avatar.region} audience.`,
     },
   ]
 

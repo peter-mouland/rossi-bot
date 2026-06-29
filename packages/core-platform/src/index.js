@@ -1,5 +1,5 @@
 export { getConfig } from './config.js'
 export { logger } from './logger.js'
-export { saveTranscripts, saveResearch, saveDigest, renderFindingsMarkdown } from './files.js'
+export { saveTranscripts, saveResearch, saveDigest, renderFindingsMarkdown, parseTranscript } from './files.js'
 export { loadVideoTypes, loadVideoType } from './video-types.js'
 export { sendEmail } from './email.js'

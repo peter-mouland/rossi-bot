@@ -10,7 +10,7 @@ function headers() {
   }
 }
 
-export async function submit(transcript, avatar, { title, dryRun = false, typeId } = {}) {
+export async function submit(transcript, avatar, { title, dryRun = false, typeId, orientation } = {}) {
   const motionEngine = typeId
     ? avatar.heygenMotionEngines?.[typeId]
     : avatar.heygenMotionEngine
@@ -20,14 +20,16 @@ export async function submit(transcript, avatar, { title, dryRun = false, typeId
     return { videoId: 'dry-run', status: 'dry-run' }
   }
 
+  const avatarId = (orientation && avatar.heygenAvatarIds?.[orientation]) ?? avatar.heygenAvatarId
+
   const paddedScript = `<break time="0.5s"/>${transcript}<break time="0.5s"/>`
 
   const body = {
     type: 'avatar',
-    avatar_id: avatar.heygenAvatarId,
+    avatar_id: avatarId,
     voice_id: avatar.heygenVoiceId,
     script: paddedScript,
-    engine: motionEngine,
+    engine: { type: motionEngine },
     resolution: '720p',
     ...(title && { title }),
   }

@@ -13,23 +13,15 @@ export function buildResearchPrompt(avatar, sources = ['web', 'youtube']) {
     .map((id, i) => `${i + 1}. Use \`${getSourceGuidance(id)}\``)
     .join('\n')
 
-  const focusBlock = avatar.researchFocus
-    ? `\n## Research Focus\n${avatar.researchFocus}\nPrioritise sources that match this. Discard results that clearly don't.\n`
-    : ''
-
-  const forbiddenBlock = avatar.forbiddenTopics?.length
-    ? `\n## Off-Limits Topics\nDo not surface, select, or include sources related to:\n${avatar.forbiddenTopics.map(t => `- ${t}`).join('\n')}\n`
-    : ''
+  const researchGuidance = avatar.prompts?.research ? `\n${avatar.prompts.research}\n` : ''
 
   return `You are a content researcher for ${avatar.name}.
 Today's date is ${currentDate()}. All search tools are pre-filtered to the last 7 days — only surface content published in that window. Use this when constructing search queries — never append a year other than ${currentYear()}.
 
 ## Avatar Profile
 - **Name:** ${avatar.name}
-- **Topic of Expertise:** ${avatar.topicOfExpertise}
-- **Sub-topics:** ${avatar.subTopics.join(', ')}
 - **Region:** ${avatar.region} (all searches and content should be relevant to this region)
-${focusBlock}${forbiddenBlock}
+${researchGuidance}
 ## Your Task
 ${sourceList}
 ${sources.length + 1}. Call \`report_findings\` with your structured research output
@@ -38,16 +30,19 @@ Only include sources published in the last 7 days. Provide 2–4 candidate angle
 }
 
 export function buildAngleSelectionPrompt(avatar) {
+  const angleGuidance = avatar.prompts?.angle ?? ''
+
   return `You are an editorial assistant for ${avatar.name}.
 
 ## Avatar Profile
 - **Name:** ${avatar.name}
-- **Topic of Expertise:** ${avatar.topicOfExpertise}
-- **Angle Preference:** ${avatar.anglePreference}
+
+## Angle Preference
+${angleGuidance}
 
 ## Your Task
 Call \`select_angle\` with the index of the best candidate angle from the list provided.
-Apply the avatar's angle preference strictly — it is the editorial rule that overrides all other considerations.`
+Apply the angle preference above strictly — it is the editorial rule that overrides all other considerations.`
 }
 
 export function buildAllScriptsPrompt(avatar, videoTypes, { chosenAngle, findings, rawSources, exampleScript }) {
@@ -74,9 +69,10 @@ export function buildAllScriptsPrompt(avatar, videoTypes, { chosenAngle, finding
   const typeBlocks = Object.entries(videoTypes)
     .map(([id, vt]) => {
       const seriesRole = typeDescriptions[id] ?? vt.description
+      const charLimit = vt.maxChars ? ` — HARD LIMIT: ${vt.maxChars} characters maximum, do not exceed` : ''
       return `### ${vt.label} (\`${id}\`)
 Series role: ${seriesRole}
-Target: ${vt.durationSeconds}s (~${vt.approxWords} words — count carefully)`
+Target: ${vt.durationSeconds}s (~${vt.approxWords} words — count carefully${charLimit})`
     })
     .join('\n\n')
 
@@ -91,38 +87,26 @@ Target: ${vt.durationSeconds}s (~${vt.approxWords} words — count carefully)`
     })
     .join('\n\n')
 
-  const voiceRulesBlock = avatar.voiceRules?.length
-    ? '## Voice Rules — Non-Negotiable\n' +
-      avatar.voiceRules.map((r, i) => `${i + 1}. ${r}`).join('\n') +
-      '\n\nThese override all other instructions. If in doubt, shorter and more specific wins.\n\n'
-    : ''
+  const scriptGuidance = avatar.prompts?.script ? `${avatar.prompts.script}\n\n` : ''
 
   const exampleBlock = exampleScript
     ? `## Example Script — Match This Voice\n${exampleScript}\n\n`
     : ''
 
-  const audienceBlock = avatar.audience
-    ? `- **Audience:** ${avatar.audience}\n`
-    : ''
-
-  const forbiddenBlock = avatar.forbiddenTopics?.length
-    ? `\n## Off-Limits\nNever cover these topics, even if the angle touches them:\n${avatar.forbiddenTopics.map(t => `- ${t}`).join('\n')}\n`
-    : ''
-
   return `You are a scriptwriter for ${avatar.name}.
 Today's date is ${currentDate()}.
+These scripts will be spoken aloud by an AI video avatar — write for the ear, not the eye. Pacing is controlled with SSML break tags.
 
 ## Avatar Profile
 - **Name:** ${avatar.name}
-- **Voice:** ${avatar.toneOfVoice}
 - **Region:** ${avatar.region}
-${audienceBlock}${forbiddenBlock}
+
 ## Content Series
 These three formats are a funnel — not three versions of the same script. The teaser creates a curiosity gap. The summary resolves it. The deep-dive earns the full understanding. Write them so a viewer who watches all three gets a progressively richer experience, not the same points repeated at different lengths. The teaser and summary must end with a natural prompt to watch the deep dive — not a forced call-to-action, but a genuine reason ("there's a lot more to this", "the full picture is more interesting", "I go into the mechanics in the deep dive").
 
 Find the time-sensitive element in the research — a rate that could change, a deadline, a trend that's moving now — and name it. Give the viewer a reason this week matters, not next month.
 
-${voiceRulesBlock}${exampleBlock}## Angle to Cover
+${scriptGuidance}${exampleBlock}## Angle to Cover
 ${chosenAngle.angle}
 
 **Why this angle:** ${chosenAngle.rationale}
@@ -138,6 +122,7 @@ ${typeBlocks}
 - Written in ${avatar.name}'s voice — see Voice Rules above
 - Pure spoken words only — no stage directions, no scene headings
 - Hit the word counts precisely
+- Use \`<break time="0.5s"/>\` between punchy sentences where a natural pause would land. Use \`<break time="1s"/>\` at major section transitions in the deep-dive. Do not overuse — one every few sentences maximum.
 
 ## Output Format
 \`\`\`title

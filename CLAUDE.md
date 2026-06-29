@@ -179,6 +179,16 @@ DRY_RUN=true pnpm --filter @rossi-bot/cli dev -- run
 LOG_LEVEL=debug pnpm --filter @rossi-bot/cli dev -- run --avatar pete
 ```
 
+```bash
+# Re-submit a saved transcript to the video generator
+node apps/cli/src/index.js submit --avatar aria --transcript packages/avatars/aria/transcripts/2026-06-29-my-title.md
+
+# Dry-run (parse and log only, no submission)
+DRY_RUN=true node apps/cli/src/index.js submit --avatar aria --transcript packages/avatars/aria/transcripts/2026-06-29-my-title.md
+```
+
+`submit` parses the saved transcript markdown, extracts each section (Teaser, Summary, Deep Dive), and submits them to the avatar's configured generator. Useful for re-submitting after a failed run or testing with a manually edited transcript.
+
 ## Agent Readiness
 
 The pipeline is built to evolve into a full agent. Seams to watch:

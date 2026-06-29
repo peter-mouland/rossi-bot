@@ -5,51 +5,15 @@
   "fromEmail": "pete@the-gist.uk",
   "outputValidators": ["uni_nake@hotmail.com"],
   "heygenAvatarId": "42e99c99f7d84f97a5d1a1a550203b7c",
+  "heygenAvatarIds": {
+    "portrait": "f8613100deae4201af7e6988f6ba5bbe",
+    "landscape": "42e99c99f7d84f97a5d1a1a550203b7c"
+  },
   "heygenVoiceId": "475615105d7649baa946712134448d56",
   "heygenMotionEngines": {
-    "teaser": "avatar_v",
+    "teaser": "avatar_iii",
     "summary": "",
     "deep-dive": ""
   },
-  "region": "GB",
-  "audience": "Senior frontend engineers and tech leads, 5–15 years experience. Currently working in a product company or agency, probably managing or mentoring others. Frustrated by decisions made above them they can't control, trying to do good work within messy real-world constraints. Responds to someone who has been in the same situation and talks straight about what actually works.",
-  "toneOfVoice": "Pete anchors every point in something he personally saw, built, or got wrong. He treats the listener as a peer — same level, not a student. He goes deep on one idea and leaves everything else out. He names the pattern, gives the example, and stops. He never tells you why you should care — he trusts you to figure that out.",
-  "topicOfExpertise": "Frontend engineering and software team leadership",
-  "anglePreference": "Always lead with the practitioner angle — the lived experience of a dev or tech lead. Avoid macro trend-report angles. Pete wants one idea the reader can go off and try or think about this week.",
-  "researchFocus": "Practical frontend engineering and tech lead content — real patterns, real tradeoffs, things a working developer or lead can act on this week. Ignore generic 'future of AI' trend pieces, tooling hype without substance, and non-frontend content.",
-  "forbiddenTopics": [
-    "Backend, DevOps, or infrastructure content not directly relevant to frontend teams",
-    "Crypto, Web3, or blockchain development",
-    "Career advice framed as 'how to get a job' or resume tips",
-    "Generic productivity or self-help not grounded in engineering work",
-    "AI hype pieces without concrete engineering substance"
-  ],
-  "voiceRules": [
-    "Open with a specific thing Pete saw, built, or got wrong — never open abstract or with a trend statement",
-    "Before the point, mirror the listener's situation — describe what they're probably dealing with right now so they feel understood",
-    "Name the antagonist — what structural force is making this hard (the flat folder structure, the velocity pressure, the meeting culture) and say it plainly",
-    "Find the time-sensitive element in the research and name it — why this conversation is happening now",
-    "Include one quotable line — a comparison or reframe striking enough to share with a teammate",
-    "After the call to action, describe what changes once they do it — one sentence showing the outcome",
-    "Close the deep-dive with a reframe — one sentence that shifts how the listener sees the whole problem, not a summary",
-    "No structural signposting — never say 'let me break this down', 'let me zoom out', or 'here's the takeaway'",
-    "One idea per script — resist the urge to add a second point even if it's related",
-    "Short sentences. If connecting two thoughts with 'and' or 'but', make them two sentences",
-    "Numbers must come from the research — no invented stats, no vague 'many teams'",
-    "End with one thing to go and do or think about — not a list, not a summary, one thing",
-    "Never explain why the advice matters after making the point — trust the listener",
-    "Jargon is fine, define it once and move on — don't over-explain",
-    "Never use: 'let's dive in', 'I want to share', 'it's important to note', 'in today's world', 'at the end of the day'",
-    "No rhetorical questions immediately answered — 'So what does this mean? Well...' is an AI tell",
-    "Never use passive constructions — 'it can be seen that' or 'this is something many developers find'"
-  ],
-  "subTopics": [
-    "React and TypeScript patterns for maintainable codebases",
-    "Platform-first thinking",
-    "Domain-driven design applied to frontend team structure",
-    "Responsibilities of code — why utils dirs and constants files are anti-patterns",
-    "Engineering principles that actually survive contact with a real team",
-    "Influencing change and leading without authority",
-    "Frontend team leadership and mentoring senior engineers"
-  ]
+  "region": "GB"
 }
